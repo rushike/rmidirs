@@ -1,0 +1,442 @@
+{
+    "info": {
+        "0x8": {
+            "id": 8,
+            "length": 2,
+            "mask": 127,
+            "name": "note_off",
+            "params": [
+                "note_number",
+                "velocity"
+            ],
+            "type": "NOTE"
+        },
+        "0x9": {
+            "id": 9,
+            "length": 2,
+            "mask": 127,
+            "name": "note_on",
+            "params": [
+                "note_number",
+                "velocity"
+            ],
+            "type": "NOTE"
+        },
+        "0xA": {
+            "id": 10,
+            "length": 2,
+            "mask": 127,
+            "name": "after_touch",
+            "params": [
+                "note_number",
+                "amount"
+            ]
+        },
+        "0xB": {
+            "id": 11,
+            "length": 2,
+            "mask": 127,
+            "name": "controller",
+            "params": [
+                "controller_type",
+                "value"
+            ],
+            "types": {
+                "0x00": {
+                    "cntrl_id": 0,
+                    "cntrl_name": "blank_select"
+                },
+                "0x01": {
+                    "cntrl_id": 1,
+                    "cntrl_name": "modulation"
+                },
+                "0x02": {
+                    "cntrl_id": 2,
+                    "cntrl_name": "breath_controller"
+                },
+                "0x04": {
+                    "cntrl_id": 4,
+                    "cntrl_name": "foot_controller"
+                },
+                "0x05": {
+                    "cntrl_id": 5,
+                    "cntrl_name": "portamento_time"
+                },
+                "0x06": {
+                    "cntrl_id": 6,
+                    "cntrl_name": "data_entry"
+                },
+                "0x07": {
+                    "cntrl_id": 7,
+                    "cntrl_name": "main_volume"
+                },
+                "0x08": {
+                    "cntrl_id": 8,
+                    "cntrl_name": "balance"
+                },
+                "0x0A": {
+                    "cntrl_id": 10,
+                    "cntrl_name": "pan"
+                },
+                "0x0B": {
+                    "cntrl_id": 11,
+                    "cntrl_name": "expression_controller"
+                },
+                "0x0C": {
+                    "cntrl_id": 12,
+                    "cntrl_name": "effect_control_0"
+                },
+                "0x0D": {
+                    "cntrl_id": 13,
+                    "cntrl_name": "effect_control_1"
+                },
+                "0x10": {
+                    "cntrl_id": 16,
+                    "cntrl_name": "general_purpose_controller_0"
+                },
+                "0x11": {
+                    "cntrl_id": 17,
+                    "cntrl_name": "general_purpose_controller_1"
+                },
+                "0x12": {
+                    "cntrl_id": 18,
+                    "cntrl_name": "general_purpose_controller_2"
+                },
+                "0x13": {
+                    "cntrl_id": 19,
+                    "cntrl_name": "general_purpose_controller_3"
+                },
+                "0x20": {
+                    "cntrl_id": 32,
+                    "cntrl_name": "LSB_for_controller_0"
+                },
+                "0x21": {
+                    "cntrl_id": 33,
+                    "cntrl_name": "LSB_for_controller_1"
+                },
+                "0x22": {
+                    "cntrl_id": 34,
+                    "cntrl_name": "LSB_for_controller_2"
+                },
+                "0x23": {
+                    "cntrl_id": 35,
+                    "cntrl_name": "LSB_for_controller_3"
+                },
+                "0x24": {
+                    "cntrl_id": 36,
+                    "cntrl_name": "LSB_for_controller_4"
+                },
+                "0x25": {
+                    "cntrl_id": 37,
+                    "cntrl_name": "LSB_for_controller_5"
+                },
+                "0x26": {
+                    "cntrl_id": 38,
+                    "cntrl_name": "LSB_for_controller_6"
+                },
+                "0x27": {
+                    "cntrl_id": 39,
+                    "cntrl_name": "LSB_for_controller_7"
+                },
+                "0x28": {
+                    "cntrl_id": 40,
+                    "cntrl_name": "LSB_for_controller_8"
+                },
+                "0x29": {
+                    "cntrl_id": 41,
+                    "cntrl_name": "LSB_for_controller_9"
+                },
+                "0x2A": {
+                    "cntrl_id": 42,
+                    "cntrl_name": "LSB_for_controller_10"
+                },
+                "0x2B": {
+                    "cntrl_id": 43,
+                    "cntrl_name": "LSB_for_controller_11"
+                },
+                "0x2C": {
+                    "cntrl_id": 44,
+                    "cntrl_name": "LSB_for_controller_12"
+                },
+                "0x2D": {
+                    "cntrl_id": 45,
+                    "cntrl_name": "LSB_for_controller_13"
+                },
+                "0x2E": {
+                    "cntrl_id": 46,
+                    "cntrl_name": "LSB_for_controller_14"
+                },
+                "0x2F": {
+                    "cntrl_id": 47,
+                    "cntrl_name": "LSB_for_controller_15"
+                },
+                "0x30": {
+                    "cntrl_id": 48,
+                    "cntrl_name": "LSB_for_controller_16"
+                },
+                "0x31": {
+                    "cntrl_id": 49,
+                    "cntrl_name": "LSB_for_controller_17"
+                },
+                "0x32": {
+                    "cntrl_id": 50,
+                    "cntrl_name": "LSB_for_controller_18"
+                },
+                "0x33": {
+                    "cntrl_id": 51,
+                    "cntrl_name": "LSB_for_controller_19"
+                },
+                "0x34": {
+                    "cntrl_id": 52,
+                    "cntrl_name": "LSB_for_controller_20"
+                },
+                "0x35": {
+                    "cntrl_id": 53,
+                    "cntrl_name": "LSB_for_controller_21"
+                },
+                "0x36": {
+                    "cntrl_id": 54,
+                    "cntrl_name": "LSB_for_controller_22"
+                },
+                "0x37": {
+                    "cntrl_id": 55,
+                    "cntrl_name": "LSB_for_controller_23"
+                },
+                "0x38": {
+                    "cntrl_id": 56,
+                    "cntrl_name": "LSB_for_controller_24"
+                },
+                "0x39": {
+                    "cntrl_id": 57,
+                    "cntrl_name": "LSB_for_controller_25"
+                },
+                "0x3A": {
+                    "cntrl_id": 58,
+                    "cntrl_name": "LSB_for_controller_26"
+                },
+                "0x3B": {
+                    "cntrl_id": 59,
+                    "cntrl_name": "LSB_for_controller_27"
+                },
+                "0x3C": {
+                    "cntrl_id": 60,
+                    "cntrl_name": "LSB_for_controller_28"
+                },
+                "0x3D": {
+                    "cntrl_id": 61,
+                    "cntrl_name": "LSB_for_controller_29"
+                },
+                "0x3E": {
+                    "cntrl_id": 62,
+                    "cntrl_name": "LSB_for_controller_30"
+                },
+                "0x3F": {
+                    "cntrl_id": 63,
+                    "cntrl_name": "LSB_for_controller_31"
+                },
+                "0x40": {
+                    "cntrl_id": 64,
+                    "cntrl_name": "damper_pedal"
+                },
+                "0x41": {
+                    "cntrl_id": 65,
+                    "cntrl_name": "portamento"
+                },
+                "0x42": {
+                    "cntrl_id": 66,
+                    "cntrl_name": "sostenuto"
+                },
+                "0x43": {
+                    "cntrl_id": 67,
+                    "cntrl_name": "soft_pedal"
+                },
+                "0x44": {
+                    "cntrl_id": 68,
+                    "cntrl_name": "legato_footswitch"
+                },
+                "0x45": {
+                    "cntrl_id": 69,
+                    "cntrl_name": "hold"
+                },
+                "0x46": {
+                    "cntrl_id": 70,
+                    "cntrl_name": "sound_controller_0"
+                },
+                "0x47": {
+                    "cntrl_id": 71,
+                    "cntrl_name": "sound_controller_1"
+                },
+                "0x48": {
+                    "cntrl_id": 72,
+                    "cntrl_name": "sound_controller_2"
+                },
+                "0x49": {
+                    "cntrl_id": 73,
+                    "cntrl_name": "sound_controller_3"
+                },
+                "0x4A": {
+                    "cntrl_id": 74,
+                    "cntrl_name": "sound_controller_4"
+                },
+                "0x4B": {
+                    "cntrl_id": 75,
+                    "cntrl_name": "sound_controller_5"
+                },
+                "0x4C": {
+                    "cntrl_id": 76,
+                    "cntrl_name": "sound_controller_6"
+                },
+                "0x4D": {
+                    "cntrl_id": 77,
+                    "cntrl_name": "sound_controller_7"
+                },
+                "0x4E": {
+                    "cntrl_id": 78,
+                    "cntrl_name": "sound_controller_8"
+                },
+                "0x4F": {
+                    "cntrl_id": 79,
+                    "cntrl_name": "sound_controller_9"
+                },
+                "0x50": {
+                    "cntrl_id": 80,
+                    "cntrl_name": "post_general_purpose_controller_0"
+                },
+                "0x51": {
+                    "cntrl_id": 81,
+                    "cntrl_name": "post_general_purpose_controller_1"
+                },
+                "0x52": {
+                    "cntrl_id": 82,
+                    "cntrl_name": "post_general_purpose_controller_2"
+                },
+                "0x53": {
+                    "cntrl_id": 83,
+                    "cntrl_name": "post_general_purpose_controller_3"
+                },
+                "0x54": {
+                    "cntrl_id": 84,
+                    "cntrl_name": "portamento_control"
+                },
+                "0x5B": {
+                    "cntrl_id": 91,
+                    "cntrl_name": "effects_depth_0"
+                },
+                "0x5C": {
+                    "cntrl_id": 92,
+                    "cntrl_name": "effects_depth_1"
+                },
+                "0x5D": {
+                    "cntrl_id": 93,
+                    "cntrl_name": "effects_depth_2"
+                },
+                "0x5E": {
+                    "cntrl_id": 94,
+                    "cntrl_name": "effects_depth_3"
+                },
+                "0x5F": {
+                    "cntrl_id": 95,
+                    "cntrl_name": "effects_depth_4"
+                },
+                "0x60": {
+                    "cntrl_id": 96,
+                    "cntrl_name": "data_increment"
+                },
+                "0x61": {
+                    "cntrl_id": 97,
+                    "cntrl_name": "data_decrement"
+                },
+                "0x62": {
+                    "cntrl_id": 98,
+                    "cntrl_name": "nonreg_param_num_lsb"
+                },
+                "0x63": {
+                    "cntrl_id": 99,
+                    "cntrl_name": "nonreg_param_num_msb"
+                },
+                "0x64": {
+                    "cntrl_id": 100,
+                    "cntrl_name": "reg_param_num_lsb"
+                },
+                "0x65": {
+                    "cntrl_id": 101,
+                    "cntrl_name": "reg_param_num_msb"
+                },
+                "0x79": {
+                    "cntrl_id": 121,
+                    "cntrl_name": "mode_messages_0"
+                },
+                "0x7A": {
+                    "cntrl_id": 122,
+                    "cntrl_name": "mode_messages_1"
+                },
+                "0x7B": {
+                    "cntrl_id": 123,
+                    "cntrl_name": "mode_messages_2"
+                },
+                "0x7C": {
+                    "cntrl_id": 124,
+                    "cntrl_name": "mode_messages_3"
+                },
+                "0x7D": {
+                    "cntrl_id": 125,
+                    "cntrl_name": "mode_messages_4"
+                },
+                "0x7E": {
+                    "cntrl_id": 126,
+                    "cntrl_name": "mode_messages_5"
+                },
+                "0x7F": {
+                    "cntrl_id": 127,
+                    "cntrl_name": "mode_messages_6"
+                }
+            }
+        },
+        "0xC": {
+            "id": 12,
+            "length": 1,
+            "mask": 127,
+            "name": "program_change",
+            "params": [
+                "program_number"
+            ]
+        },
+        "0xD": {
+            "id": 13,
+            "length": 1,
+            "mask": 127,
+            "name": "channel_after_touch",
+            "params": [
+                "amount"
+            ]
+        },
+        "0xE": {
+            "id": 14,
+            "length": 2,
+            "mask": 127,
+            "name": "pitch_bend",
+            "params": [
+                "vlsb",
+                "vmsb"
+            ]
+        }
+    },
+    "map_str": {
+        "note_off": "0x8",
+        "note_on": "0x9",
+        "after_touch": "0xA",
+        "controller": "0xB",
+        "program_change": "0xC",
+        "channel_after_touch": "0xD",
+        "pitch_bend": "0xE"
+    },
+    "map_byte": {
+        "0x8": "note_off",
+        "0x9": "note_on",
+        "0xA": "after_touch",
+        "0xB": "controller",
+        "0xC": "program_change",
+        "0xD": "channel_after_touch",
+        "0xE": "pitch_bend"
+    }
+}
