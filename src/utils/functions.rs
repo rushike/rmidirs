@@ -69,19 +69,16 @@ pub fn masked_number(buf : &[u8], mask : &[u8], format : ByteEncodingFormat) -> 
   /// | 001FFFFF	    |    FF FF 7F              |
   /// | 00200000	    |    81 80 80 00           |
   /// 
-pub fn varnumber(buf: &[u8], start : usize, format : ByteEncodingFormat) -> u32 {
-  const bits : u32 = 7;
-  const NUM_MASK : u32 = (1 << bits) - 1; // it will extract number from bits stored
-  const SET_MASK : u32 = 1 << bits;       // it will extract info of control bit
+pub fn from_var_len(buf: &[u8]) -> (usize, u32) {
+  
   let mut num:u32 = 0_u32;
+  let mut i = 0;
+  while (buf[i] & 0x80) == 0x80 {
+    num += (buf[i] & 0xFF) as u32;
+    i += 1;
+  } num += (buf[i] & 0x7F) as u32; 
 
-  for i in start..start + 4 {
-    match format {
-        ByteEncodingFormat::BigEndian => num = ( num << bits ) | (buf[i] as u32 & NUM_MASK),
-        ByteEncodingFormat::LittleEndian => num = num | ((buf[i] as u32 & NUM_MASK) << bits),
-    }
-  }
-  num
+  (i + 1, num)
 }
 
 /// @masked process `length` number of bytes and masked with `mask`,

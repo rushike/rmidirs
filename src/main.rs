@@ -19,7 +19,9 @@ fn main() {
   // let r = M3Byte::from(12);
   // let q = m1byte!(12);
   // let s = m2byte!(12);
-  // let t = m3byte!(12);
+  // let s:&[u8] = &[0, 1, 0];
+  // let t = m3byte!(s);
+  // println!("t, {:?}", t);
   // let u = m4bits!(24);
 
   // println!("q : {:?}, s : {:?}, t : {:?}, u : {:?}", q, s, t, u);
@@ -30,7 +32,7 @@ fn main() {
   // println!("json :) {:?}", json["8"].to_string());
 
   let midi = MidiFileReader::local("./midis/test2.mid").parse();
-  println!("midi : ) {:?}", midi)
+  println!("midi : ) {:?}", midi);
   // println!("leading ones {}, {}", i8::from_be_bytes([0xfa]));
 }
 

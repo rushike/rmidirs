@@ -1,6 +1,6 @@
 use std::default;
 
-use self::channel_event::ChannelEvent;
+use self::{channel_event::ChannelEvent, meta_event::MetaEvent};
 
 pub mod channel_event;
 pub mod meta_event;
@@ -11,7 +11,7 @@ pub mod sys_event;
 #[derive(Debug, Clone, Default)]
 pub enum  MidiEvent {
     ChannelEvent(ChannelEvent),
-    MetaEvent,
+    MetaEvent(MetaEvent),
     SysEvent,
     #[default] Uinit // Uninitialize MIDI Event 
 }
@@ -48,7 +48,7 @@ impl MidiEvent {
   pub fn event_byte(&self) -> u8 {
     match self {
         Self::ChannelEvent(event) => event.event_byte(),
-        Self::MetaEvent => 0xFF,
+        Self::MetaEvent(_) => 0xFF,
         Self::SysEvent => 0xF0,
         Self::Uinit => panic!("can't get event byte from uninitialized event {:?}", self)
     }
@@ -57,15 +57,16 @@ impl MidiEvent {
 
 impl From<(u8, &[u8])> for MidiEvent {
     fn from((byte, tail): (u8, &[u8])) -> Self {
+      
       match MidiEvent::event_type(byte) {
         "CHANNEL_EVENT" => { 
-          MidiEvent::ChannelEvent(ChannelEvent::from((byte, tail)))
+          Self::ChannelEvent(ChannelEvent::from((byte, tail)))
         }, 
         "META_EVENT" => { // meta event
-          MidiEvent::MetaEvent
+          Self::MetaEvent(MetaEvent::from((byte, tail)))
         },
         "SYS_EVENT" => { // sysex event
-          MidiEvent::SysEvent
+          Self::SysEvent
         }
         _ => panic!("Can't create MIDI event. Unexpected MIDI event byte, passed 0x{:0X}", byte)
     }

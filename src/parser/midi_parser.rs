@@ -16,6 +16,7 @@ impl MidiParser {
       for (i, track) in track_parser.iter().enumerate() {
         // println!("pushing {:?}", i);
         midi.add_track(track);
+        // break;
       }
       // let ptr = MidiTrackParser::parse(1, &buf[ptr..], &mut midi);
 

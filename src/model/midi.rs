@@ -1,3 +1,5 @@
+use std::usize;
+
 use super::{midi_header::MidiHeader, midi_track::MidiTrack};
 
 #[derive(Debug, Clone, Default)]
@@ -21,5 +23,9 @@ impl Midi {
     self.tracks.push(track);
     self.total_tracks += 1;
     // self
+  }
+
+  pub fn track(&self, n : usize) -> &MidiTrack {
+    self.tracks.get(n).unwrap()
   }
 }

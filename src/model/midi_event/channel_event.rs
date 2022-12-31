@@ -65,14 +65,15 @@ pub struct PitchBend {
 }
 
 #[derive(Debug, Clone, Default)]
+#[repr(u32)]
 pub enum ChannelEvent {
-  NoteOn(NoteOn),
-  NoteOff(NoteOff),
-  AfterTouch(AfterTouch),
-  Controller(Controller),
-  ProgramChange(ProgramChange),
-  ChannelAfterTouch(ChannelAfterTouch),
-  PitchBend(PitchBend),
+  NoteOn(NoteOn) = 0x8,
+  NoteOff(NoteOff) = 0x9,
+  AfterTouch(AfterTouch) = 0xA,
+  Controller(Controller) = 0xB,
+  ProgramChange(ProgramChange)= 0xC,
+  ChannelAfterTouch(ChannelAfterTouch) = 0xD,
+  PitchBend(PitchBend) = 0xE,
   #[default] Uinit
 }
 
@@ -125,56 +126,57 @@ impl ChannelEvent {
 }
 
 impl From<(u8, &[u8])> for ChannelEvent {
-    fn from((byte, tail): (u8, &[u8])) -> Self {
+    fn from((byte, rest): (u8, &[u8])) -> Self {
+      
       match byte & 0xF0 {
         0x80 => {
           ChannelEvent::NoteOn(NoteOn {
             channel: m4bits!(byte & 0xF),
-            note: m1byte!(tail[0]),
-            velocity: m1byte!(tail[1]),
+            note: m1byte!(rest[0]),
+            velocity: m1byte!(rest[1]),
           })
         },
         0x90 => {
           ChannelEvent::NoteOff(NoteOff {
             channel: m4bits!(byte & 0xF),
-            note: m1byte!(tail[0]),
-            velocity: m1byte!(tail[1]),
+            note: m1byte!(rest[0]),
+            velocity: m1byte!(rest[1]),
           })
         }
         0xA0 => {
           ChannelEvent::AfterTouch(AfterTouch {
             channel: m4bits!(byte & 0xF),
-            note: m1byte!(tail[0]),
-            amount : m1byte!(tail[1]),
+            note: m1byte!(rest[0]),
+            amount : m1byte!(rest[1]),
           }) 
         }, 
         0xB0 => {
           ChannelEvent::Controller(Controller {
             channel: m4bits!(byte & 0xF),
-            controller_type : m1byte!(tail[0]),
-            value: m1byte!(tail[1]),
+            controller_type : m1byte!(rest[0]),
+            value: m1byte!(rest[1]),
           }) 
         },
         0xC0 => {
           ChannelEvent::ProgramChange(ProgramChange {
             channel: m4bits!(byte & 0xF),
-            program_number : m1byte!(tail[0]),
+            program_number : m1byte!(rest[0]),
           })
         },
         0xD0 => {
           ChannelEvent::ChannelAfterTouch(ChannelAfterTouch {
             channel: m4bits!(byte & 0xF),
-            amount : m1byte!(tail[0]),
+            amount : m1byte!(rest[0]),
           })
         },
         0xE0 => {
           ChannelEvent::PitchBend(PitchBend {
             channel: m4bits!(byte & 0xF),
-            vlsb : m1byte!(tail[0]),
-            vmsb : m1byte!(tail[1]),
+            vlsb : m1byte!(rest[0]),
+            vmsb : m1byte!(rest[1]),
           })
         },
-        byte    => panic!("From<&[u8]> trait not implemented for Channel event with start byte {byte} ") 
+        byte    => panic!("From<&[u8]> trait not implemented for Channel-event with start byte {byte} ") 
     }
   }
 }

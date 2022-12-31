@@ -8,7 +8,7 @@ use crate::{
   primitive::{
     M1Byte,
     m1byte
-  }, errors::MidiParseErrors};
+  }, errors::MidiParseErrors, utils::functions::from_var_len};
 
 lazy_static::lazy_static!(
   #[derive(Debug)]
@@ -61,43 +61,52 @@ impl<'a> MidiEventParser<'a> {
     return MidiEventIter::new(self);
   }
   fn parse(& mut self) -> Option<MidiEvent> {
-    let mut buf = self.bytes;
+    let buf = self.bytes;
     if buf.len() < 4 {
       return None;
     }
-    let (delta_time, ptr) = Self::parse_delta_time_with_ptr(&buf[..4]);
+    let (ptr, delta_time) = Self::parse_delta_time_with_ptr(&buf[..4]);
     
     let mut ebyte = buf[ptr];
 
-    buf = &buf[ptr..];
+    let buf = &buf[ptr..];
 
     let end = if buf.len() > 10 {10} else {buf.len()};
     // println!("track_no : {}, ptr : {ptr}, buf head : {:?}", self.track_no, &buf[..end]);
     // println!("event iter : {:?}, ptr : {:?}, curr_buf : {:?}", event_iter.last_event, ptr, buf);
   
-    let ptr =  match MidiEvent::event_type(ebyte) {
-        "CHANNEL_EVENT" => MidiEventParser::parse_channel_event(buf[0]),
+    let (event_buf, rest_buf) =  match MidiEvent::event_type(ebyte) {
+      "CHANNEL_EVENT" => {
+        let ptr = MidiEventParser::parse_channel_event(buf[0]);
+        (&buf[1..ptr], &buf[ptr..])
+      }
 
-        "META_EVENT" => MidiEventParser::parse_meta_event(buf),
+      "META_EVENT" => {
+        let ptr = MidiEventParser::parse_meta_event(buf);
+        (&buf[1..ptr], &buf[ptr..])
+      }
 
-        "SYS_EVENT" => MidiEventParser::parse_sys_event(buf),
-        
-        _ => {
-          if self.last_event.is_channel_event() {
-            ebyte = self.last_event.event_byte();
-            // println!("!!! Exception Ebyte: {:?}, bytes : {:?}", ebyte, &self.bytes[..end]);
-            MidiEventParser::parse_channel_event(ebyte) - 1
-          } else {
-            panic!("Can't parse MIDI event. Unexpected MIDI event byte in track : {:?}, passed 0x{:0X}", self.track_no, buf[0]) 
-          }
+      "SYS_EVENT" => {
+        // let ptr = MidiEventParser::parse_sys_event(buf)
+        panic!("SYS_EVENT not implemented");
+      },
+      
+      _ => {
+        if self.last_event.is_channel_event() {
+          ebyte = self.last_event.event_byte();
+          // println!("!!! Exception Ebyte: {:?}, bytes : {:?}", ebyte, &self.bytes[..end]);
+          let ptr = MidiEventParser::parse_channel_event(ebyte) - 1;
+          (&buf[..ptr], &buf[ptr..])
+        } else {
+          panic!("Can't parse MIDI event. Unexpected MIDI event byte in track : {:?}, passed 0x{:0X}", self.track_no, buf[0]) 
         }
-      };
+      }
+    };
 
-    let midi_event = MidiEvent::from((ebyte, &buf[..ptr]));
     
-    buf = &buf[ptr..];
+    let midi_event = MidiEvent::from((ebyte, event_buf));
 
-    self.bytes = buf;
+    self.bytes = rest_buf;
 
     // println!("ptr : {ptr}, {:?}", midi_event);
 
@@ -123,7 +132,7 @@ impl<'a> MidiEventParser<'a> {
     let meta_event_byte = &buf[0];
     let meta_event_subtype_byte = &buf[1];
     let end = if buf.len() < 6 { buf.len() } else { 6 };
-    let (length, ptr) = Self::parse_var_len(&buf[2..end]);
+    let (ptr, length) = Self::parse_var_len(&buf[2..end]);
     // println!("meta_event_byte: {:?}, meta_event_subtype_byte: {:?}, length: {}, ptr : {:?}", meta_event_byte, meta_event_subtype_byte, length, ptr);
     2 + length as usize + ptr
   }
@@ -132,22 +141,14 @@ impl<'a> MidiEventParser<'a> {
     0
   }
 
-  fn parse_delta_time_with_ptr(buf : &[u8]) -> (u32, usize) {
+  fn parse_delta_time_with_ptr(buf : &[u8]) -> (usize, u32) {
     assert!(buf.len() <= 4, "delta time must be <= 4 bytes. But passed: {} number of bytes. bytes are : {:?} ", buf.len(), buf);
     
-    Self::parse_var_len(buf)
+    return from_var_len(buf);
   }
 
-  fn parse_var_len(buf : &[u8]) -> (u32, usize) {
+  fn parse_var_len(buf : &[u8]) -> (usize, u32) {
     assert!(buf.len() <= 4, "var length must be <= 4 bytes. But passed: {} number of bytes", buf.len());
-    
-    let mut num: u32 = 0;
-    let mut i = 0;
-    while (buf[i] & 0x80) == 0x80 {
-      num += (buf[i] & 0xFF) as u32;
-      i += 1;
-    } num += (buf[i] & 0x7F) as u32; 
-
-    return (num, i + 1);
+    return from_var_len(buf);   
   }
 }
