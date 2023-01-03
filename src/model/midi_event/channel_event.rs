@@ -104,6 +104,38 @@ impl ChannelEvent {
         ChannelEvent::Uinit => panic!("Can't get event channel for uninitialized channel event. Channel event is {:?}", self),
     }
   }
+
+  pub fn is_note_on_off_event(&self) -> bool {
+    match self {
+      ChannelEvent::NoteOn(_) | ChannelEvent::NoteOff(_) => true,
+      _=> false
+    } 
+  }
+
+  pub fn is_note_on_event(&self) -> bool {
+    match self {
+      ChannelEvent::NoteOn(_) => true,
+      ChannelEvent::NoteOff(event) => *event.velocity != 0,
+      _=> false
+    } 
+  }
+
+  pub fn is_note_off_event(&self) -> bool {
+    match self {
+      ChannelEvent::NoteOn(event) => *event.velocity == 0,
+      ChannelEvent::NoteOff(_) => true,
+      _=> false
+    } 
+  }
+
+  pub fn get_note_number(&self) -> Option<M1Byte> {
+    match self {
+      ChannelEvent::NoteOn(event) => Some(event.note),
+      ChannelEvent::NoteOff(event) => Some(event.note),
+      _=> None
+    } 
+  }
+
   pub fn is_channel_event(byte : u8) -> bool {
     return byte & 0xF0 >= 0x80 && byte & 0xF0 < 0xF0;
   }

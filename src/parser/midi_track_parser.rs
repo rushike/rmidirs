@@ -58,7 +58,7 @@ impl<'a> MidiTrackParser<'a> {
         let length = number(&buf[4..8], ENC_FORMAT);
         let total_length = 8 + length as usize;
         // println!("Track length: {} & total length : {:?}", length, total_length);
-        let mut track = MidiTrack::new(length);
+        let mut track = MidiTrack::from((&self.midi_header, length));
 
         let mut event_parser = MidiEventParser::new(&buf[8..total_length], length as usize);
         

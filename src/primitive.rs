@@ -1,28 +1,48 @@
 use std::ops::{Deref, BitAnd};
 
-use crate::utils::{functions::number, ByteEncodingFormat};
+use crate::utils::{functions::{number, from_var_len}, ByteEncodingFormat};
 
 pub type Word = u32;
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub struct MXByte(u32);
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub struct M4Byte(u32);
+
+impl From<&[u8]>  for M4Byte {
+    fn from(buf: &[u8]) -> Self {
+      assert!(buf.len() >= 4, "exptected the input buffer to have at least 4 bytes. But passed buffer with {} length", buf.len());
+      M4Byte(u32::from_be_bytes(buf.try_into().unwrap()))
+    }
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct M3Byte(u32);
 
 impl From<&[u8]>  for M3Byte {
     fn from(buf: &[u8]) -> Self {
       assert!(buf.len() >= 3, "exptected the input buffer to have at least 3 bytes. But passed buffer with {} length", buf.len());
-      M3Byte(number(buf, ByteEncodingFormat::BigEndian))
+      M3Byte((buf[0] as u32) << 16 | (buf[1] as u32) << 8 | buf[2] as u32)
     }
 }
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct M2Byte(u32);
 
+impl From<&[u8]>  for M2Byte {
+  fn from(buf: &[u8]) -> Self {
+    assert!(buf.len() >= 2, "exptected the input buffer to have at least 2 bytes. But passed buffer with {} length", buf.len());
+    M2Byte((buf[0] as u32) << 8 | buf[1] as u32)
+  }
+}
 
-#[derive(Debug, Clone, Copy)]
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct M1Byte(u32);
 
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct M4Bits(u32);
 
 impl Into<u8> for M4Bits {
@@ -31,7 +51,7 @@ impl Into<u8> for M4Bits {
   }
 }
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct M1Bit(u32);
 
 impl Into<u8> for M1Bit {
@@ -39,6 +59,7 @@ impl Into<u8> for M1Bit {
       self.0 as u8
   }
 }
+
 
 macro_rules! impl_from_for_mtypes{
   ($t_in : tt, $t_out : tt, $mask : literal) => {
@@ -83,18 +104,12 @@ macro_rules!  impl_midi_dtypes{
     };
 }
 
-impl_midi_dtypes!(m3byte, M3Byte, 0xFF);
-impl_midi_dtypes!(m2byte, M2Byte, 0xFF);
+impl_midi_dtypes!(mxbyte, MXByte, 0xFFFFFFFF); // here mask makes no sense, so kept max possible
+impl_midi_dtypes!(m4byte, M4Byte, 0xFFFFFFFF);
+impl_midi_dtypes!(m3byte, M3Byte, 0xFFFFFF);
+impl_midi_dtypes!(m2byte, M2Byte, 0xFFFF);
 impl_midi_dtypes!(m1byte, M1Byte, 0xFF);
 impl_midi_dtypes!(m4bits, M4Bits, 0xF);
 impl_midi_dtypes!(m1bit, M1Bit, 0x1);
 
-pub use {m1byte, m2byte, m3byte, m4bits, m1bit};
-
-// #[macro_export]
-// macro_rules! m3byte {
-//   ($num : expr) => {
-//     M3Byte::from($num)
-//     // M3Byte($num)
-//   }
-// }
+pub use {mxbyte, m4byte, m3byte, m2byte, m1byte, m4bits, m1bit};

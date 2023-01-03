@@ -16,23 +16,9 @@ lazy_static::lazy_static!(
 );
 
 fn main() {
-  // let r = M3Byte::from(12);
-  // let q = m1byte!(12);
-  // let s = m2byte!(12);
-  // let s:&[u8] = &[0, 1, 0];
-  // let t = m3byte!(s);
-  // println!("t, {:?}", t);
-  // let u = m4bits!(24);
-
-  // println!("q : {:?}, s : {:?}, t : {:?}, u : {:?}", q, s, t, u);
-  // let json1 : serde_json::Value = de::from_reader(File::open("./midis/midi-channel-event-schema.json")
-  //                                 .expect("File should open read only"))
-  //                                 .unwrap();
-
-  // println!("json :) {:?}", json["8"].to_string());
-
-  let midi = MidiFileReader::local("./midis/test2.mid").parse();
-  println!("midi : ) {:?}", midi);
+  
+  let midi = MidiFileReader::local("./midis/test.mid").parse();
+  println!("midi : ) {:?}", midi.track(0).timeline());
   // println!("leading ones {}, {}", i8::from_be_bytes([0xfa]));
 }
 

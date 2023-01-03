@@ -2,6 +2,8 @@
 
 use std::iter::FromIterator;
 
+use crate::{primitive::{MXByte, mxbyte}, };
+
 use super::ByteEncodingFormat;
 
 /// @string process string with `format` specified from `length` number of bytes.
@@ -13,18 +15,6 @@ pub fn string(buf: &[u8], format : ByteEncodingFormat) -> &str {
 /// This will return u32 int, since u32 is max what midi support.
 pub fn number(buf: &[u8], format : ByteEncodingFormat) -> u32 {
   masked_number(buf, &[0xFF], format)
-  // let mut num = match buf.len() {
-  //   1 => [0; 1],   
-  //   1 => [0; 2],   
-  //   1 => [0; 3],   
-  //   1 => [0; 4],
-  //   _ => panic!("Can't create number from {} number bytes", buf.len()),   
-  // };
-  // num.copy_from_slice(buf);
-  // match format {
-  //   ByteEncodingFormat::BigEndian => u32::from_be_bytes(num),
-  //   ByteEncodingFormat::LittleEndian => u32::from_le_bytes(num),
-  // }
 }
 
 pub fn masked_number(buf : &[u8], mask : &[u8], format : ByteEncodingFormat) -> u32 {
@@ -69,16 +59,21 @@ pub fn masked_number(buf : &[u8], mask : &[u8], format : ByteEncodingFormat) -> 
   /// | 001FFFFF	    |    FF FF 7F              |
   /// | 00200000	    |    81 80 80 00           |
   /// 
-pub fn from_var_len(buf: &[u8]) -> (usize, u32) {
+pub fn from_var_len(buf: &[u8]) -> (usize, MXByte) {
   
   let mut num:u32 = 0_u32;
   let mut i = 0;
-  while (buf[i] & 0x80) == 0x80 {
-    num += (buf[i] & 0xFF) as u32;
-    i += 1;
-  } num += (buf[i] & 0x7F) as u32; 
 
-  (i + 1, num)
+  // println!("var len buffer : {:?}", buf);
+
+  while (buf[i] & 0x80) == 0x80 {
+    num = (num << 7) | (buf[i] & 0x7F) as u32;
+    // println!("num : is {}", num);
+    i += 1;
+  } num = (num << 7) | (buf[i] & 0x7F) as u32; 
+  // println!("num : is out :: {}", num);
+
+  (i + 1, mxbyte!(num))
 }
 
 /// @masked process `length` number of bytes and masked with `mask`,

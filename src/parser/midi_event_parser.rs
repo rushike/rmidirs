@@ -7,7 +7,7 @@ use crate::{
   }, 
   primitive::{
     M1Byte,
-    m1byte
+    m1byte, MXByte
   }, errors::MidiParseErrors, utils::functions::from_var_len};
 
 lazy_static::lazy_static!(
@@ -104,7 +104,7 @@ impl<'a> MidiEventParser<'a> {
     };
 
     
-    let midi_event = MidiEvent::from((ebyte, event_buf));
+    let midi_event = MidiEvent::from((delta_time, ebyte, event_buf));
 
     self.bytes = rest_buf;
 
@@ -134,20 +134,20 @@ impl<'a> MidiEventParser<'a> {
     let end = if buf.len() < 6 { buf.len() } else { 6 };
     let (ptr, length) = Self::parse_var_len(&buf[2..end]);
     // println!("meta_event_byte: {:?}, meta_event_subtype_byte: {:?}, length: {}, ptr : {:?}", meta_event_byte, meta_event_subtype_byte, length, ptr);
-    2 + length as usize + ptr
+    2 + *length as usize + ptr
   }
 
   fn parse_sys_event(buf : &[u8]) -> usize {
     0
   }
 
-  fn parse_delta_time_with_ptr(buf : &[u8]) -> (usize, u32) {
+  fn parse_delta_time_with_ptr(buf : &[u8]) -> (usize, MXByte) {
     assert!(buf.len() <= 4, "delta time must be <= 4 bytes. But passed: {} number of bytes. bytes are : {:?} ", buf.len(), buf);
     
     return from_var_len(buf);
   }
 
-  fn parse_var_len(buf : &[u8]) -> (usize, u32) {
+  fn parse_var_len(buf : &[u8]) -> (usize, MXByte) {
     assert!(buf.len() <= 4, "var length must be <= 4 bytes. But passed: {} number of bytes", buf.len());
     return from_var_len(buf);   
   }
