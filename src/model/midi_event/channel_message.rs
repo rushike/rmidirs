@@ -64,9 +64,9 @@ pub struct PitchBend {
   vmsb : M1Byte
 }
 
-#[derive(Debug, Clone, Default)]
+#[derive(Debug, Clone)]
 #[repr(u32)]
-pub enum ChannelEvent {
+pub enum ChannelMessage {
   NoteOn(NoteOn) = 0x8,
   NoteOff(NoteOff) = 0x9,
   AfterTouch(AfterTouch) = 0xA,
@@ -74,64 +74,67 @@ pub enum ChannelEvent {
   ProgramChange(ProgramChange)= 0xC,
   ChannelAfterTouch(ChannelAfterTouch) = 0xD,
   PitchBend(PitchBend) = 0xE,
-  #[default] Uinit
+  Invalid(String)
 }
 
-impl ChannelEvent {
+impl ChannelMessage {
 
-  pub fn event_byte(&self) -> u8 {
-    match self {
-      ChannelEvent::NoteOn(_) => 0x8 << 4 | self.event_channel(),
-      ChannelEvent::NoteOff(_) => 0x9 << 4 | self.event_channel(),
-      ChannelEvent::AfterTouch(_) => 0xA << 4 | self.event_channel(),
-      ChannelEvent::Controller(_) => 0xB << 4 | self.event_channel(),
-      ChannelEvent::ProgramChange(_) => 0xC << 4 | self.event_channel(),
-      ChannelEvent::ChannelAfterTouch(_) => 0xD << 4 | self.event_channel(),
-      ChannelEvent::PitchBend(_) => 0xE << 4 | self.event_channel(),
-      ChannelEvent::Uinit => panic!("Can't get event byte for uninitialized channel event. Channel event is {:?}", self),
+  pub fn event_byte(&self) -> Option<u8> {
+    match self.event_channel() {
+      Some(channel) => match self {
+        ChannelMessage::NoteOn(_) => Some(0x8 << 4 | channel),
+        ChannelMessage::NoteOff(_) => Some(0x9 << 4 | channel),
+        ChannelMessage::AfterTouch(_) => Some(0xA << 4 | channel),
+        ChannelMessage::Controller(_) => Some(0xB << 4 | channel),
+        ChannelMessage::ProgramChange(_) => Some(0xC << 4 | channel),
+        ChannelMessage::ChannelAfterTouch(_) => Some(0xD << 4 | channel),
+        ChannelMessage::PitchBend(_) => Some(0xE << 4 | channel),
+        ChannelMessage::Invalid(_) => None
+      },
+      None => None,
     }
   }
 
-  pub fn event_channel(&self) -> u8 {
+  pub fn event_channel(&self) -> Option<u8> {
     match self {
-        ChannelEvent::NoteOn(e) => e.channel.into(),
-        ChannelEvent::NoteOff(e) => e.channel.into(),
-        ChannelEvent::AfterTouch(e) => e.channel.into(),
-        ChannelEvent::Controller(e) => e.channel.into(),
-        ChannelEvent::ProgramChange(e) => e.channel.into(),
-        ChannelEvent::ChannelAfterTouch(e) => e.channel.into(),
-        ChannelEvent::PitchBend(e) => e.channel.into(),
-        ChannelEvent::Uinit => panic!("Can't get event channel for uninitialized channel event. Channel event is {:?}", self),
+        ChannelMessage::NoteOn(e) => Some(e.channel.into()),
+        ChannelMessage::NoteOff(e) => Some(e.channel.into()),
+        ChannelMessage::AfterTouch(e) => Some(e.channel.into()),
+        ChannelMessage::Controller(e) => Some(e.channel.into()),
+        ChannelMessage::ProgramChange(e) => Some(e.channel.into()),
+        ChannelMessage::ChannelAfterTouch(e) => Some(e.channel.into()),
+        ChannelMessage::PitchBend(e) => Some(e.channel.into()),
+        ChannelMessage::Invalid(_) => None
     }
   }
 
   pub fn is_note_on_off_event(&self) -> bool {
     match self {
-      ChannelEvent::NoteOn(_) | ChannelEvent::NoteOff(_) => true,
+      ChannelMessage::NoteOn(_) | ChannelMessage::NoteOff(_) => true,
       _=> false
     } 
   }
 
   pub fn is_note_on_event(&self) -> bool {
     match self {
-      ChannelEvent::NoteOn(_) => true,
-      ChannelEvent::NoteOff(event) => *event.velocity != 0,
+      ChannelMessage::NoteOn(_) => true,
+      ChannelMessage::NoteOff(event) => *event.velocity != 0,
       _=> false
     } 
   }
 
   pub fn is_note_off_event(&self) -> bool {
     match self {
-      ChannelEvent::NoteOn(event) => *event.velocity == 0,
-      ChannelEvent::NoteOff(_) => true,
+      ChannelMessage::NoteOn(event) => *event.velocity == 0,
+      ChannelMessage::NoteOff(_) => true,
       _=> false
     } 
   }
 
   pub fn get_note_number(&self) -> Option<M1Byte> {
     match self {
-      ChannelEvent::NoteOn(event) => Some(event.note),
-      ChannelEvent::NoteOff(event) => Some(event.note),
+      ChannelMessage::NoteOn(event) => Some(event.note),
+      ChannelMessage::NoteOff(event) => Some(event.note),
       _=> None
     } 
   }
@@ -157,63 +160,63 @@ impl ChannelEvent {
   }
 }
 
-impl From<(u8, &[u8])> for ChannelEvent {
+impl From<(u8, &[u8])> for ChannelMessage {
     fn from((byte, rest): (u8, &[u8])) -> Self {
       
       match byte & 0xF0 {
         0x80 => {
-          ChannelEvent::NoteOn(NoteOn {
+          ChannelMessage::NoteOn(NoteOn {
             channel: m4bits!(byte & 0xF),
             note: m1byte!(rest[0]),
             velocity: m1byte!(rest[1]),
           })
         },
         0x90 => {
-          ChannelEvent::NoteOff(NoteOff {
+          ChannelMessage::NoteOff(NoteOff {
             channel: m4bits!(byte & 0xF),
             note: m1byte!(rest[0]),
             velocity: m1byte!(rest[1]),
           })
         }
         0xA0 => {
-          ChannelEvent::AfterTouch(AfterTouch {
+          ChannelMessage::AfterTouch(AfterTouch {
             channel: m4bits!(byte & 0xF),
             note: m1byte!(rest[0]),
             amount : m1byte!(rest[1]),
           }) 
         }, 
         0xB0 => {
-          ChannelEvent::Controller(Controller {
+          ChannelMessage::Controller(Controller {
             channel: m4bits!(byte & 0xF),
             controller_type : m1byte!(rest[0]),
             value: m1byte!(rest[1]),
           }) 
         },
         0xC0 => {
-          ChannelEvent::ProgramChange(ProgramChange {
+          ChannelMessage::ProgramChange(ProgramChange {
             channel: m4bits!(byte & 0xF),
             program_number : m1byte!(rest[0]),
           })
         },
         0xD0 => {
-          ChannelEvent::ChannelAfterTouch(ChannelAfterTouch {
+          ChannelMessage::ChannelAfterTouch(ChannelAfterTouch {
             channel: m4bits!(byte & 0xF),
             amount : m1byte!(rest[0]),
           })
         },
         0xE0 => {
-          ChannelEvent::PitchBend(PitchBend {
+          ChannelMessage::PitchBend(PitchBend {
             channel: m4bits!(byte & 0xF),
             vlsb : m1byte!(rest[0]),
             vmsb : m1byte!(rest[1]),
           })
         },
-        byte    => panic!("From<&[u8]> trait not implemented for Channel-event with start byte {byte} ") 
+        byte    => panic!("From<&[u8]> trait not implemented for Channel-event with start byte 0x{:02X} ", byte) 
     }
   }
 }
 
-impl From<&[u8]> for ChannelEvent{
+impl From<&[u8]> for ChannelMessage{
   fn from(bytes: &[u8]) -> Self {
     Self::from((bytes[0], &bytes[1..]))    
   }

@@ -6,6 +6,8 @@ use crate::{primitive::{MXByte, mxbyte, M2Byte, M3Byte}};
 pub struct DeltaTime(MXByte);
 
 impl  DeltaTime {
+  pub fn len(&self) -> usize {self.0.len()}
+
   pub fn to_microseconds(&self, time_div : M2Byte, tempo : M3Byte) -> f32 {
     (((*self.0 as f32 * 16.0 / *time_div as f32).ceil() / 2.0).floor() * *tempo as f32) / 8.0
   }
@@ -23,6 +25,12 @@ impl Default for DeltaTime {
     fn default() -> Self {
         Self(mxbyte!(0))
     }
+}
+
+impl From<&[u8]> for DeltaTime {
+  fn from(buf: &[u8]) -> Self {
+    Self(MXByte::from(buf))
+  }
 }
 
 impl From<u32> for DeltaTime {

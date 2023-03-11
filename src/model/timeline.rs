@@ -2,7 +2,7 @@ use std::collections::HashMap;
 
 use crate::primitive::{M2Byte, M3Byte, m3byte};
 
-use super::{midi_track::MidiTrack, midi_event::{MidiEvent, Event, meta_event::MetaEvent}};
+use super::{midi_track::MidiTrack, midi_event::{MidiEvent, meta_event::MetaEvent}};
 
 #[derive(Debug, Clone, Default)]
 pub struct NoteEvent {
@@ -106,9 +106,7 @@ fn update_tempo_if_tempo_event(event : &MidiEvent, tempo : M3Byte) -> M3Byte{
   match &event.event {
     Event::MetaEvent(
       MetaEvent::Tempo(tempo)
-    ) => {
-      println!("event {:?}", event);
-      *tempo},
+    ) => *tempo,
     _=> tempo
   }
 }

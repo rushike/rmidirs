@@ -1,11 +1,10 @@
+
+
 use std::ops::{Deref, BitAnd};
 
 use crate::utils::{functions::{number, from_var_len}, ByteEncodingFormat};
 
 pub type Word = u32;
-
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct MXByte(u32);
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct M4Byte(u32);
@@ -60,6 +59,77 @@ impl Into<u8> for M1Bit {
   }
 }
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub struct MXByte(u32, usize);
+
+impl MXByte {
+    pub fn len(&self) -> usize {self.1}
+}
+
+// impl From<(u32, u32)> for MXByte {
+//   fn from((word, len): (u32, u32)) -> Self {
+//     MXByte(word as u32, len as u32)
+//   }
+// }
+
+impl From<u32> for MXByte {
+  fn from(word: u32) -> Self {
+    if word == 0 {return MXByte(0, 1)}
+    MXByte(word, ((word as f64).log2() / 7.0 + 1.0) as usize)
+  }
+}
+
+impl  From<&[u8]> for MXByte {
+  /// @varnumber process the variable length number from `start` position.
+  /// It will panic if number exceed u32 int.
+  /// 
+  /// ## Midi Var Number Format
+  /// Strategy used is based on delta time encoding in MIDI messages
+  /// Last 7 bits in each byte will carry info, 
+  /// 1 bits of every byte is set to 1 expect 1 bit of last byte is set to 0
+  /// 
+  /// e.g. 
+  /// 
+  /// | 8 bytes number| Variable Length encoding |
+  /// |---------------|--------------------------|
+  /// | 00000040      |    40                    |
+  /// | 0000007F	    |    7F                    |
+  /// | 00000080	    |    81 00                 |
+  /// | 00002000	    |    C0 00                 |
+  /// | 00003FFF	    |    FF 7F                 |
+  /// | 00004000	    |    81 80 00              |
+  /// | 00100000	    |    C0 80 00              |
+  /// | 001FFFFF	    |    FF FF 7F              |
+  /// | 00200000	    |    81 80 80 00           |
+  /// 
+  fn from(buf: &[u8]) -> MXByte {
+
+    let mut num:u32 = 0_u32;
+    let mut i = 0;
+  
+    while (buf[i] & 0x80) == 0x80 {
+      num = (num << 7) | (buf[i] & 0x7F) as u32;
+      i += 1;
+    } num = (num << 7) | (buf[i] & 0x7F) as u32; 
+  
+    mxbyte!(num)
+  }
+}
+  
+
+impl Deref for MXByte {
+  type Target = Word;
+
+  fn deref(&self) -> &Self::Target {
+    &self.0
+  }
+}
+#[macro_export]
+macro_rules! mxbyte {
+  ($num : expr) => {
+    MXByte::from($num as u32)
+  }
+}
 
 macro_rules! impl_from_for_mtypes{
   ($t_in : tt, $t_out : tt, $mask : literal) => {
@@ -104,7 +174,7 @@ macro_rules!  impl_midi_dtypes{
     };
 }
 
-impl_midi_dtypes!(mxbyte, MXByte, 0xFFFFFFFF); // here mask makes no sense, so kept max possible
+// impl_midi_dtypes!(mxbyte, MXByte, 0xFFFFFFFF); // here mask makes no sense, so kept max possible
 impl_midi_dtypes!(m4byte, M4Byte, 0xFFFFFFFF);
 impl_midi_dtypes!(m3byte, M3Byte, 0xFFFFFF);
 impl_midi_dtypes!(m2byte, M2Byte, 0xFFFF);

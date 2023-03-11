@@ -61,6 +61,6 @@ impl<'a> Reader for Buffer<'a> {
   }
 
   fn parse(&self) -> Midi {
-      MidiParser::parse(&self.contents)
+      MidiParser::parse(&self.contents).unwrap()
   }
 }

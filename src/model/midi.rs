@@ -19,10 +19,9 @@ impl Midi {
     &self.header
   }
 
-  pub fn add_track(&mut self, track: MidiTrack){
+  pub fn add_track(&mut self, track: MidiTrack) {
     self.tracks.push(track);
     self.total_tracks += 1;
-    // self
   }
 
   pub fn track(&self, n : usize) -> &MidiTrack {

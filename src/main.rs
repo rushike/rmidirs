@@ -18,7 +18,7 @@ lazy_static::lazy_static!(
 fn main() {
   
   let midi = MidiFileReader::local("./midis/test.mid").parse();
-  println!("midi : ) {:?}", midi.track(0).timeline());
+  println!("midi : ) {:?}", midi);
   // println!("leading ones {}, {}", i8::from_be_bytes([0xfa]));
 }
 

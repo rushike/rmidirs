@@ -6,11 +6,11 @@ pub struct TextEvent;
 #[derive(Debug, Clone)]
 pub struct ChannelPrefix;
 
-// #[derive(Debug, Clone, Default)]
-// pub struct EndOfTrack;
+#[derive(Debug, Clone)]
+pub struct EndOfTrack;
 
-// #[derive(Debug, Clone)]
-// pub struct SetTempo(M3Byte);
+#[derive(Debug, Clone)]
+pub struct Tempo(M3Byte);
 
 #[derive(Debug, Clone)]
 pub struct SMPTEOffset;
@@ -29,9 +29,9 @@ pub struct KeySignature {
   mi : M1Bit
 }
 
-#[derive(Debug, Clone, Default)]
+#[derive(Debug, Clone)]
 #[repr(i32)]
-pub enum MetaEvent {
+pub enum MetaMessage {
   Text(TextEvent) = 0x01,
   CopyrightNotice(TextEvent) = 0x02,
   TrackName(TextEvent) = 0x03,
@@ -41,24 +41,15 @@ pub enum MetaEvent {
   CuePoint(TextEvent) = 0x07,
   ChannelPrefix(ChannelPrefix) = 0x20,
   EndOfTrack = 0x2F,
-  Tempo(M3Byte) = 0x51,
-
+  Tempo(Tempo) = 0x51,
   SMPTEOffset = 0x54,
-  
-  TimeSignature{
-    nn : M1Byte,
-    dd : M1Byte,
-    cc : M1Byte,
-    bb : M1Byte,
-  } = 0x58,
-  KeySignature {
-    sf : M1Byte,
-    mi : M1Bit
-  } = 0x59,
-  #[default] Uinit // Uninitialize MIDI Meta Event 
+  TimeSignature(TimeSignature) = 0x58,
+  KeySignature (KeySignature) = 0x59,
+  Invalid(String)
 }
 
-impl MetaEvent {
+impl MetaMessage {
+
   pub fn is_tempo_event(&self) -> bool {
     match &self {
       Self::Tempo(_) => true,
@@ -71,7 +62,7 @@ impl MetaEvent {
     // assert!(buf[0] == 0x51, "tempo event should start with 0x51 byte. But passed {:X}", buf[0]);
     assert!(buf[1] == 3, "tempo event must be 3 bytes long. But passed '{:X}' instead.", buf[1]);
     
-    MetaEvent::Tempo(m3byte!(&buf[2..5]))
+    MetaMessage::Tempo(Tempo(m3byte!(&buf[2..5])))
   }
 
   fn get_time_signature_from(buf : &[u8]) -> Self {
@@ -79,27 +70,26 @@ impl MetaEvent {
 
     assert!(buf[1] == 4, "tempo event must be 4 bytes long. But passed '{:X}' instead.", buf[1]);
 
-    MetaEvent::TimeSignature{
+    MetaMessage::TimeSignature (TimeSignature {
       nn : m1byte!(buf[0]),
       dd : m1byte!(buf[1]),
       cc : m1byte!(buf[2]),
       bb : m1byte!(buf[3])
-    }
+    })
   }
 
   fn get_key_signature_from(buf : &[u8]) -> Self {
-    MetaEvent::KeySignature{
+    MetaMessage::KeySignature(KeySignature {
       sf : m1byte!(buf[0]),
       mi : m1bit!(buf[1])
-    }
+    })
   }
 }
 
 
 
-impl From<(u8, &[u8])> for MetaEvent {
+impl From<(u8, &[u8])> for MetaMessage {
   fn from((byte, rest): (u8, &[u8])) -> Self {
-    // println!("meta : {:X}, rest : {:02X?}", byte, rest);
     let subtype = rest[0];
     
     match subtype {
@@ -111,15 +101,13 @@ impl From<(u8, &[u8])> for MetaEvent {
       0x58 => Self::get_time_signature_from(rest),
       0x59 => Self::get_key_signature_from(rest),
       
-      _=> Self::Uinit
-      // _ => panic!("From<&[u8]> trait not implemented for Meta-event sub-type with start byte {subtype:X}"), 
+      _=> Self::Invalid(format!("From<&[u8]> trait not implemented for Meta-event sub-type with start byte {subtype:X}"))
     }
-    // MetaEvent::Uinit
   }
 }
 
-impl From<&[u8]> for MetaEvent{
+impl From<&[u8]> for MetaMessage{
   fn from(bytes: &[u8]) -> Self {
-    MetaEvent::from((bytes[0], &bytes[1..]))
+    MetaMessage::from((bytes[0], &bytes[1..]))
   }
 }

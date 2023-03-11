@@ -1,77 +1,76 @@
 
 use std::default;
 
-use crate::{model::{midi::Midi, midi_track::MidiTrack, midi_header::MidiHeader}, utils::{ByteEncodingFormat, functions::number}, parser::midi_event_parser::{MidiEventIter, MidiEventParser}};
-
-use super::Parser;
-
-pub struct MidiTrackIter<'a>{
-  parser : &'a mut MidiTrackParser<'a>, 
-  iter : usize,
-}
-impl<'a> MidiTrackIter<'a> {
-  fn new(parser : &'a mut MidiTrackParser<'a>) -> MidiTrackIter<'a> {
-    return Self {
-      iter : 0,
-      parser,
-    };
-  }
-}
-
-impl<'a> Iterator for MidiTrackIter<'a> {
-    type Item = MidiTrack;
-
-    fn next(&mut self) -> Option<Self::Item> {
-      self.iter += 1;
-      return self.parser.parse();
+use crate::{
+  model::{
+    midi::Midi, 
+    midi_track::MidiTrack, 
+    midi_header::MidiHeader, midi_event::{delta_time::DeltaTime, MidiEvent, MidiMessageType, MidiMessage, channel_message}
+  }, 
+  utils::{ByteEncodingFormat, functions}, 
+  parser::{
+    midi_event_parser::MidiEventParser,
+    error::{
+      MidiParseError,
+      MidiParseErrorKind::{InvalidMidiTrackHeader, EndOfBuffer, self}
     }
-}
+  }, primitive::MXByte, 
+};
 
-pub struct MidiTrackParser<'a> {
-  bytes : &'a [u8],
+use super::{Parser, parser_state::ParserState};
+
+
+#[derive(Debug, Clone)]
+pub struct MidiTrackParser {
   midi_header : MidiHeader,
+  state : ParserState
 }
 
-impl<'a> MidiTrackParser<'a> {
+impl MidiTrackParser {
 
-  pub fn new(bytes : &'a [u8], midi_header : MidiHeader) -> MidiTrackParser<'a> {
-    MidiTrackParser { 
-      bytes, 
-      midi_header 
-    }
-  }
-
-  pub fn iter(&'a mut self) -> MidiTrackIter<'a> {
-    return MidiTrackIter::new(self);
+  pub fn new(midi_header: MidiHeader, state : ParserState) -> MidiTrackParser {
+    MidiTrackParser { midi_header, state }
   }
 
   /// Parses a MIDI track. And move the slice pointer forward.
-  fn parse(&mut self) -> Option<MidiTrack> {
-    if self.bytes.len() < 8 {return None}
+  pub fn parse(&mut self, buf : &[u8]) -> Result<MidiTrack, MidiParseError> {
+    let mut midi_track = MidiTrack::default();
 
-    const ENC_FORMAT: ByteEncodingFormat = ByteEncodingFormat::BigEndian;
+    let mut midi_event_parser = MidiEventParser::new(&self.midi_header);
 
-    let buf = self.bytes;
-    
-    match &buf[..4] {
-      b"MTrk" => {
-        let length = number(&buf[4..8], ENC_FORMAT);
-        let total_length = 8 + length as usize;
-        // println!("Track length: {} & total length : {:?}", length, total_length);
-        let mut track = MidiTrack::from((&self.midi_header, length));
+    let mut last_event_byte = None;
 
-        let mut event_parser = MidiEventParser::new(&buf[8..total_length], length as usize);
-        
-        for event in event_parser.iter() {
-          track.add_event(event);
-        }
+    loop {
+      if self.state.curr() >= self.state.end() {return Ok(midi_track)}
 
-        self.bytes = &buf[total_length..];
+      let delta_time = DeltaTime::from(self.state.mxbyte(buf));
 
-        return Some(track);
-      }
-      // _ => return None
-      _header => panic!("Midi Track header should start with 'MTrk'. But was got {_header:?}.")
-    }
+      let midi_event =  match MidiEvent::event_type(buf[self.state.curr()])  {
+
+          Some(MidiMessageType::Channel) | None => {
+            match midi_event_parser.parse_channel_event(buf, &mut self.state, last_event_byte) {
+              Ok(channel_message) => {
+                last_event_byte = channel_message.event_byte();
+                MidiEvent::new(delta_time, MidiMessage::ChannelEvent(channel_message))
+              },
+              Err(err) => return Err(err)
+            }
+          },  
+          Some(MidiMessageType::Meta) => {
+            last_event_byte = None;
+            let meta_event = midi_event_parser.parse_meta_event(buf, &mut self.state).unwrap();
+            MidiEvent::new(delta_time, MidiMessage::MetaEvent(meta_event))
+          },
+          Some(MidiMessageType::Sys) => {
+            last_event_byte = None;
+            let sys_event = midi_event_parser.parse_sys_event(buf).unwrap();
+            MidiEvent::new(delta_time, MidiMessage::SysEvent(sys_event))
+          }
+
+          Some(MidiMessageType::Invalid(msg)) => return Err(MidiParseError::new(self.state.clone(), MidiParseErrorKind::InvalidEventByte, Some(msg)))
+      };
+      midi_track.add_event(midi_event);
+    };  
   }
+
 }

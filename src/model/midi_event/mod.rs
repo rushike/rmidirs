@@ -2,74 +2,84 @@ use std::default;
 
 use crate::primitive::{MXByte, M1Byte};
 
-use self::{channel_event::ChannelEvent, meta_event::MetaEvent, delta_time::DeltaTime};
+use self::{channel_message::ChannelMessage, meta_message::MetaMessage, delta_time::DeltaTime, sys_event::SysEvent};
 
-pub mod channel_event;
-pub mod meta_event;
+pub mod channel_message;
+pub mod meta_message;
 pub mod sys_event;
 
 pub mod delta_time;
 
 
 
-#[derive(Debug, Clone, Default)]
-pub enum Event {
-    ChannelEvent(ChannelEvent),
-    MetaEvent(MetaEvent),
-    SysEvent,
-    #[default] Uinit // Uninitialize MIDI Event 
+#[derive(Debug, Clone)]
+pub enum MidiMessage {
+    ChannelEvent(ChannelMessage),
+    MetaEvent(MetaMessage),
+    SysEvent(SysEvent),
+    Invalid(String)
 }
 
-impl Event {
-  pub fn event_type<'a>(byte : u8) -> &'a str {
-    if byte & 0xF0 >= 0x80 && byte & 0xF0 < 0xF0 {return "CHANNEL_EVENT"};
+
+#[derive(Debug, Clone)]
+pub enum MidiMessageType {
+  Channel,
+  Meta,
+  Sys,
+  Invalid(String)
+}
+
+impl MidiMessage {
+  pub fn event_type<'a>(byte : u8) -> Option<MidiMessageType> {
+    if byte & 0xF0 >= 0x80 && byte & 0xF0 < 0xF0 {return Some(MidiMessageType::Channel)};
     match byte {
-       0xFF => "META_EVENT",
-       0xF0 | 0xF7  => "SYS_EVENT",
-       _ => "UNINIT_EVENT"
-      // _byte => panic!("can't not recognize valid midi event. Passed start byte as 0x{_byte:0X}")
+       0xFF => Some(MidiMessageType::Meta),
+       0xF0 | 0xF7  => Some(MidiMessageType::Sys),
+       _ => None
     }
   }
 }
 
-impl From<(u8, &[u8])> for Event {
+impl From<(u8, &[u8])> for MidiMessage {
+
   fn from((byte, rest): (u8, &[u8])) -> Self {
-    match Self::event_type(byte)  {
-      "CHANNEL_EVENT" => { 
-        Event::ChannelEvent(ChannelEvent::from((byte, rest)))
+
+    let event_type = Self::event_type(byte).unwrap_or(MidiMessageType::Invalid(format!("Can't create MIDI event. Unexpected MIDI event byte, passed 0x{:0X}", byte)));
+    
+    match event_type  {
+      MidiMessageType::Channel => { 
+        MidiMessage::ChannelEvent(ChannelMessage::from((byte, rest)))
       }, 
-      "META_EVENT" => { // meta event
-        Event::MetaEvent(MetaEvent::from((byte, rest)))
+      MidiMessageType::Meta => { // meta event
+        MidiMessage::MetaEvent(MetaMessage::from((byte, rest)))
       },
-      "SYS_EVENT" => { // sysex event
-        Event::SysEvent
+      MidiMessageType::Sys => { // sysex event
+        MidiMessage::SysEvent(SysEvent)
       }
-      _ => panic!("Can't create MIDI event. Unexpected MIDI event byte, passed 0x{:0X}", byte)
+      MidiMessageType::Invalid(msg) => MidiMessage::Invalid(msg),
     } 
   }
 }
 
 
-#[derive(Debug, Clone, Default)]
+#[derive(Debug, Clone)]
 pub struct MidiEvent {
-  pub(crate) delta_time : DeltaTime,
-  pub(crate) event : Event
+  delta_time : DeltaTime,
+  message : MidiMessage
 }
 
 impl MidiEvent {
-  pub fn event_type<'a>(byte : u8) -> &'a str {
-    if byte & 0xF0 >= 0x80 && byte & 0xF0 < 0xF0 {return "CHANNEL_EVENT"};
-    match byte {
-       0xFF => "META_EVENT",
-       0xF0 | 0xF7  => "SYS_EVENT",
-       _ => "UNINIT_EVENT"
-      // _byte => panic!("can't not recognize valid midi event. Passed start byte as 0x{_byte:0X}")
-    }
+  pub fn new(delta_time : DeltaTime, message : MidiMessage) -> MidiEvent {
+    MidiEvent{delta_time, message}
+  }
+  pub fn event_type(byte : u8) -> Option<MidiMessageType> {
+    MidiMessage::event_type(byte)
   }
 
   pub fn is_channel_byte(byte : u8) -> bool {
-    byte & 0xF0 >= 0x80 && byte & 0xF0 < 0xF
+    byte >= 0x80 && byte < 0xFF
   }
+
   pub fn is_meta_byte(byte : u8) -> bool {
     byte == 0xFF
   }
@@ -79,60 +89,68 @@ impl MidiEvent {
   }
 
   pub fn is_channel_event(&self) -> bool {
-    match self.event {
-        Event::ChannelEvent(_) => true,
+    match self.message {
+      MidiMessage::ChannelEvent(_) => true,
         _ => false
     }
   }
 
   pub fn is_note_on_off_event(&self) -> bool {
-    match &self.event {
-      Event::ChannelEvent(event) => event.is_note_on_off_event(),
+    match &self.message {
+      MidiMessage::ChannelEvent(event) => event.is_note_on_off_event(),
       _ => false
   }
   }
 
   pub fn is_note_on_event(&self) -> bool {
-    match &self.event {
-      Event::ChannelEvent(event) => event.is_note_on_event(),
+    match &self.message {
+      MidiMessage::ChannelEvent(event) => event.is_note_on_event(),
       _ => false
     }
   }
 
   pub fn is_note_off_event(&self) -> bool {
-    match &self.event {
-      Event::ChannelEvent(event) => event.is_note_off_event(),
+    match &self.message {
+      MidiMessage::ChannelEvent(event) => event.is_note_off_event(),
       _ => false
     }
   }
 
+  pub fn delta_time(&self) -> &DeltaTime {&self.delta_time}
+
+  pub fn message(&self) -> &MidiMessage {&self.message}
+
   pub fn is_tempo_event(&self) -> bool {
-    match &self.event {
-      Event::MetaEvent(event) => event.is_tempo_event(),
+    match &self.message {
+      MidiMessage::MetaEvent(event) => event.is_tempo_event(),
       _=> false
     }
   }
 
   pub fn get_note_number(&self) -> Option<M1Byte> {
-    match &self.event {
-      Event::ChannelEvent(event) => event.get_note_number(),
+    match &self.message {
+      MidiMessage::ChannelEvent(event) => event.get_note_number(),
       _ => None
     }
   }
 
-  pub fn event_byte(&self) -> u8 {
-    match &self.event {
-        Event::ChannelEvent(event) => event.event_byte(),
-        Event::MetaEvent(_) => 0xFF,
-        Event::SysEvent => 0xF0,
-        Event::Uinit => panic!("can't get event byte from uninitialized event {:?}", self)
+  // pub fn get_channge_event(&self) -> Option<ChannelEvent> {
+
+  // }
+
+  pub fn event_byte(&self) -> Option<u8> {
+    match &self.message {
+        MidiMessage::ChannelEvent(event) => event.event_byte(),
+        MidiMessage::MetaEvent(_) => Some(0xFF),
+        MidiMessage::SysEvent(_) => Some(0xF0),
+        MidiMessage::Invalid(_) => None
     }
   }
 }
 
-impl From<(DeltaTime, Event)> for MidiEvent {
-    fn from((delta_time, event): (DeltaTime, Event)) -> Self {
-        MidiEvent { delta_time, event }
+impl From<(DeltaTime, MidiMessage)> for MidiEvent {
+    fn from((delta_time, message): (DeltaTime, MidiMessage)) -> Self {
+      MidiEvent { delta_time, message }
     }
 }
 
@@ -142,7 +160,7 @@ impl From<(MXByte, u8, &[u8])> for MidiEvent {
       Self::from(
         (
           DeltaTime::from(delta_time),
-          Event::from((byte, tail)),
+          MidiMessage::from((byte, tail)),
         )
       )
     }

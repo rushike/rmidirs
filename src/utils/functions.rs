@@ -2,7 +2,7 @@
 
 use std::iter::FromIterator;
 
-use crate::{primitive::{MXByte, mxbyte}, };
+use crate::primitive::{MXByte, mxbyte};
 
 use super::ByteEncodingFormat;
 
@@ -59,21 +59,17 @@ pub fn masked_number(buf : &[u8], mask : &[u8], format : ByteEncodingFormat) -> 
   /// | 001FFFFF	    |    FF FF 7F              |
   /// | 00200000	    |    81 80 80 00           |
   /// 
-pub fn from_var_len(buf: &[u8]) -> (usize, MXByte) {
+pub fn from_var_len(buf: &[u8]) -> MXByte {
   
   let mut num:u32 = 0_u32;
   let mut i = 0;
 
-  // println!("var len buffer : {:?}", buf);
-
   while (buf[i] & 0x80) == 0x80 {
     num = (num << 7) | (buf[i] & 0x7F) as u32;
-    // println!("num : is {}", num);
     i += 1;
   } num = (num << 7) | (buf[i] & 0x7F) as u32; 
-  // println!("num : is out :: {}", num);
 
-  (i + 1, mxbyte!(num))
+  mxbyte!(num)
 }
 
 /// @masked process `length` number of bytes and masked with `mask`,

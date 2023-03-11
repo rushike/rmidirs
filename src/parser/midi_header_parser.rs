@@ -1,10 +1,10 @@
 use crate::{model::{midi::Midi, midi_header::MidiHeader}, utils::{functions::number, ByteEncodingFormat}};
 
-use super::Parser;
+use super::{Parser, parser_state::ParserState};
 pub struct MidiHeaderParser;
 
-impl Parser for MidiHeaderParser {
-  fn parse(buf : &[u8], midi : &mut Midi) -> usize {
+impl MidiHeaderParser {
+  pub fn parse(buf : &[u8], state : &mut ParserState) -> MidiHeader {
     
     match &buf[..4] {
       b"MThd" => {
@@ -12,15 +12,17 @@ impl Parser for MidiHeaderParser {
         let end = 14;
         
         let length = number(&buf[4..8], ENC_FORMAT);
+        
         assert!(length == 6, "invalid MIDI header length. Length must be 6, but got {}", length);
 
-        midi.add_header(
-          MidiHeader::new_raw(
+        // Midi header in midi v1 is always 14 bytes long
+        state.forward(14);
+
+        return MidiHeader::new_raw(
           &buf[8..10],
           &buf[10..12],
           &buf[12..14]
-        ));
-        end
+        );
       },
       _header => panic!("MIDI header should start with 'MThd', but got {_header:?}")
     }

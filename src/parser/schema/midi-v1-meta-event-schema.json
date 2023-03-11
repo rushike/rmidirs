@@ -1,6 +1,6 @@
 {
   "info": {
-      "meta": {
+      "0xFF": {
           "id": 255,
           "name": "meta",
           "types": {
@@ -223,7 +223,7 @@
       }
   },
   "map_str": {
-      "meta": 255
+      "meta": "0xFF"
   },
   "map_byte": {
       "0xFF": "meta"

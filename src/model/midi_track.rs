@@ -2,7 +2,7 @@
 
 use crate::{primitive::{M4Byte, M2Byte, m2byte, m4byte}, };
 
-use super::{midi_event::MidiEvent, timeline::Timeline, midi_header::MidiHeader};
+use super::{midi_event::MidiEvent, midi_header::MidiHeader};
 
 #[derive(Debug, Clone)]
 pub struct MidiTrack {
@@ -51,9 +51,9 @@ impl MidiTrack {
     MidiTrackIter { events: &self.events, top : 0 }
   }
 
-  pub fn timeline(&self) -> Timeline {
-    Timeline::from(self)
-  }
+  // pub fn timeline(&self) -> Timeline {
+  //   Timeline::from(self)
+  // }
 
   /// Add MidiEvent at end off track
   pub fn add_event(&mut self, event : MidiEvent) {
