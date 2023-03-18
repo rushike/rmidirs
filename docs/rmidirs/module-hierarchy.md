@@ -5,3 +5,5 @@
   |    |> utils.functions
   |    |
   |--> |>  models 
+           |> core
+           |> note_seq

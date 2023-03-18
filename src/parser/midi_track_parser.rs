@@ -2,7 +2,7 @@
 use std::default;
 
 use crate::{
-  model::{
+  model::core::{
     midi::Midi, 
     midi_track::MidiTrack, 
     midi_header::MidiHeader, midi_event::{delta_time::DeltaTime, MidiEvent, MidiMessageType, MidiMessage, channel_message}
@@ -44,8 +44,8 @@ impl MidiTrackParser {
       if self.state.curr() >= self.state.end() {return Ok(midi_track)}
 
       let delta_time = DeltaTime::from(self.state.mxbyte(buf));
-
-      let midi_event =  match MidiEvent::event_type(buf[self.state.curr()])  {
+      
+      let midi_event =  match MidiEvent::event_type(self.state.byte(buf))  {
 
           Some(MidiMessageType::Channel) | None => {
             match midi_event_parser.parse_channel_event(buf, &mut self.state, last_event_byte) {

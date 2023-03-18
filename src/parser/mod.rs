@@ -1,4 +1,4 @@
-use crate::{model::midi::Midi};
+use crate::{model::core::midi::Midi};
 
 pub use self::midi_parser::MidiParser;
 

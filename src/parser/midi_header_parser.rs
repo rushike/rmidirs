@@ -1,4 +1,4 @@
-use crate::{model::{midi::Midi, midi_header::MidiHeader}, utils::{functions::number, ByteEncodingFormat}};
+use crate::{model::core::{midi::Midi, midi_header::MidiHeader}, utils::{functions::number, ByteEncodingFormat}};
 
 use super::{Parser, parser_state::ParserState};
 pub struct MidiHeaderParser;

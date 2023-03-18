@@ -4,77 +4,84 @@ use std::ops::{Deref, BitAnd};
 
 use crate::utils::{functions::{number, from_var_len}, ByteEncodingFormat};
 
+pub type FractionWord = (u32, u32);
+
+pub type FloatWord = f32;
+
 pub type Word = u32;
 
+pub type DoubleWord = u32;
+
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct M4Byte(u32);
+pub struct M4Byte(Word);
 
 impl From<&[u8]>  for M4Byte {
     fn from(buf: &[u8]) -> Self {
       assert!(buf.len() >= 4, "exptected the input buffer to have at least 4 bytes. But passed buffer with {} length", buf.len());
-      M4Byte(u32::from_be_bytes(buf.try_into().unwrap()))
+      M4Byte(Word::from_be_bytes(buf.try_into().unwrap()))
     }
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct M3Byte(u32);
+pub struct M3Byte(Word);
 
 impl From<&[u8]>  for M3Byte {
     fn from(buf: &[u8]) -> Self {
       assert!(buf.len() >= 3, "exptected the input buffer to have at least 3 bytes. But passed buffer with {} length", buf.len());
-      M3Byte((buf[0] as u32) << 16 | (buf[1] as u32) << 8 | buf[2] as u32)
+      M3Byte((buf[0] as Word) << 16 | (buf[1] as Word) << 8 | buf[2] as Word)
     }
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct M2Byte(u32);
+pub struct M2Byte(Word);
 
 impl From<&[u8]>  for M2Byte {
   fn from(buf: &[u8]) -> Self {
     assert!(buf.len() >= 2, "exptected the input buffer to have at least 2 bytes. But passed buffer with {} length", buf.len());
-    M2Byte((buf[0] as u32) << 8 | buf[1] as u32)
+    M2Byte((buf[0] as Word) << 8 | buf[1] as Word)
   }
 }
 
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct M1Byte(u32);
+pub struct M1Byte(Word);
 
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct M4Bits(u32);
+pub struct M4Bits(Word);
 
-impl Into<u8> for M4Bits {
-  fn into(self) -> u8 {
-      self.0 as u8
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub struct M1Bit(Word);
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub struct MNBits(Word, Word);
+
+impl Deref for MNBits {
+  type Target = Word;
+
+  fn deref(&self) -> &Self::Target {
+    &self.0
   }
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct M1Bit(u32);
-
-impl Into<u8> for M1Bit {
-  fn into(self) -> u8 {
-      self.0 as u8
+impl From<Word> for MNBits {
+  fn from(word: Word) -> Self {
+    if word == 0 {return Self(0, 1)}
+    Self(word, (word as f32).log2() as Word)
   }
 }
 
+
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct MXByte(u32, usize);
+pub struct MXByte(Word, usize);
 
 impl MXByte {
     pub fn len(&self) -> usize {self.1}
 }
 
-// impl From<(u32, u32)> for MXByte {
-//   fn from((word, len): (u32, u32)) -> Self {
-//     MXByte(word as u32, len as u32)
-//   }
-// }
-
-impl From<u32> for MXByte {
-  fn from(word: u32) -> Self {
-    if word == 0 {return MXByte(0, 1)}
+impl From<Word> for MXByte {
+  fn from(word: Word) -> Self {
+    if word == 0 {return Self(0, 1)}
     MXByte(word, ((word as f64).log2() / 7.0 + 1.0) as usize)
   }
 }
@@ -104,13 +111,13 @@ impl  From<&[u8]> for MXByte {
   /// 
   fn from(buf: &[u8]) -> MXByte {
 
-    let mut num:u32 = 0_u32;
+    let mut num:Word = 0;
     let mut i = 0;
   
     while (buf[i] & 0x80) == 0x80 {
-      num = (num << 7) | (buf[i] & 0x7F) as u32;
+      num = (num << 7) | (buf[i] & 0x7F) as Word;
       i += 1;
-    } num = (num << 7) | (buf[i] & 0x7F) as u32; 
+    } num = (num << 7) | (buf[i] & 0x7F) as Word; 
   
     mxbyte!(num)
   }
@@ -136,6 +143,12 @@ macro_rules! impl_from_for_mtypes{
     impl From<$t_in> for $crate::primitive::$t_out {
       fn from(word: $t_in) -> Self {
         $crate::primitive::$t_out((word as u32) & $mask)
+      }
+    }
+    
+    impl From<$crate::primitive::$t_out> for $t_in  {
+      fn from(word: $crate::primitive::$t_out) -> Self {
+        (word.0 & $mask) as $t_in
       }
     }              
   };

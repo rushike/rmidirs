@@ -16,7 +16,7 @@
 ### parser 
   - It will parse the entire midi file, or part, or midi messages recivieng online.
 
-### model
+### model.core
   - **model** has datasructures define to store MIDI data type, like 
     - MIDI
     - MIDI Header

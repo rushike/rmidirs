@@ -2,7 +2,7 @@ use std::default;
 
 use crate::primitive::{MXByte, M1Byte};
 
-use self::{channel_message::ChannelMessage, meta_message::MetaMessage, delta_time::DeltaTime, sys_event::SysEvent};
+use self::{channel_message::ChannelMessage, meta_message::{MetaMessage, Tempo}, delta_time::DeltaTime, sys_event::SysEvent};
 
 pub mod channel_message;
 pub mod meta_message;
@@ -127,16 +127,19 @@ impl MidiEvent {
     }
   }
 
+  pub fn get_tempo(&self) -> Option<Tempo> {
+    match &self.message {
+      MidiMessage::MetaEvent(msg) => msg.get_tempo(),
+      _ => None,
+    }
+  } 
+
   pub fn get_note_number(&self) -> Option<M1Byte> {
     match &self.message {
       MidiMessage::ChannelEvent(event) => event.get_note_number(),
       _ => None
     }
   }
-
-  // pub fn get_channge_event(&self) -> Option<ChannelEvent> {
-
-  // }
 
   pub fn event_byte(&self) -> Option<u8> {
     match &self.message {
@@ -170,4 +173,16 @@ impl From<(MXByte, &[u8])> for MidiEvent {
     fn from((delta_time, bytes): (MXByte, &[u8])) -> Self {
        Self::from((delta_time, bytes[0], &bytes[1..]))
     }
+}
+
+#[derive(Debug, Clone)]
+pub struct AbsoluteMidiEvent {
+  time : f32,
+  message : MidiMessage
+}
+
+impl AbsoluteMidiEvent {
+  pub fn new(time : f32, message: MidiMessage) -> Self {
+    AbsoluteMidiEvent { time, message}
+  }
 }

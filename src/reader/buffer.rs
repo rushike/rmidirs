@@ -1,6 +1,9 @@
 use std::{marker::PhantomData};
 
-use crate::{utils::{ByteEncodingFormat}, model::midi::Midi, parser::MidiParser};
+use crate::{
+  utils::{ByteEncodingFormat}, 
+  model::core::midi::Midi, parser::MidiParser
+};
 
 use super::{FileSrcType, MidiFileReader, Reader};
 

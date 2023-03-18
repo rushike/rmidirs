@@ -52,7 +52,7 @@ impl<'a> ParserState {
 
   /// returns the mxbyte from current position in buffer, and moved current position accordingly.
   pub fn mxbyte(&mut self, buf : &'a [u8]) -> MXByte {
-    let mxbyte = MXByte::from(&buf[self.curr .. self.curr + 4]);
+    let mxbyte = MXByte::from(&buf[self.curr .. ]);
     self.curr += mxbyte.len();
     mxbyte
   }

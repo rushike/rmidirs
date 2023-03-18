@@ -2,7 +2,10 @@
 
 use std::marker::PhantomData;
 
-use crate::{utils::ByteEncodingFormat, model::midi::Midi};
+use crate::{
+  utils::ByteEncodingFormat, 
+  model::core::midi::Midi
+};
 
 use self::{buffer::Buffer};
 

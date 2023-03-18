@@ -1,7 +1,7 @@
 use std::{fs::File, error::Error, fmt::format};
 
 use crate::{
-  model::{
+  model::core::{
     midi_event::{MidiEvent, self, meta_message::{self, MetaMessage}, channel_message::{ChannelMessage}, sys_event::SysEvent, MidiMessage}, 
     midi::Midi, midi_header::MidiHeader
   }, 
@@ -31,9 +31,9 @@ impl<'a> MidiEventParser<'a> {
   pub fn parse_channel_event(&mut self, buf : &[u8], state : &mut ParserState, last_event_byte : Option<u8>) -> Result<ChannelMessage, MidiParseError> {
 
     let event_byte = if MidiEvent::is_channel_byte( state.byte(buf)) { 
-      state.byte(buf)
+      state.next(buf, 1)[0]
     } else {
-      last_event_byte.expect(format!("{:X} not a channel event", state.byte(buf)).as_str())
+      last_event_byte.expect(format!("{:X} not a channel event. {}", state.byte(buf), &state).as_str())
     };
     
     let event_type = (event_byte & 0xF0) >> 4;
@@ -43,12 +43,10 @@ impl<'a> MidiEventParser<'a> {
     if event_info.is_null() {return Err(MidiParseError::new(state.with(format!("{}@channel[0x{:1X}]", state.name(), event_byte)), MidiParseErrorKind::InvalidEventByte, None));}
 
     let length = event_info["length"].as_u64().unwrap() as usize;
-  
-    let total_length = 1 + length;
-    
-    state.forward(total_length);
-
-    Ok(ChannelMessage::from((event_byte, &buf[state.curr() - length.. state.curr()])))
+    // dbg!(&state);
+    // dbg!(event_type);
+    // dbg!(state.take(buf, length));
+    Ok(ChannelMessage::from((event_byte, state.next(buf, length))))
   }
 
   pub fn parse_meta_event(&mut self, buf : &[u8], state : &mut ParserState) -> Result<MetaMessage, MidiParseError> {
@@ -62,9 +60,7 @@ impl<'a> MidiEventParser<'a> {
     
     state.forward(event_length);
 
-    let total_length = event_length + 2;
-
-    Ok(MetaMessage::from(state.retake(buf, total_length)))
+    Ok(MetaMessage::from((event_type, event_sub_type, state.retake(buf, event_length))))
   }
 
   pub fn parse_sys_event(&mut self, buf : &[u8]) -> Result<SysEvent, MidiParseError> {

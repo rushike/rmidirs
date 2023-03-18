@@ -1,4 +1,6 @@
-use crate::{primitive::{M3Byte, M1Byte, m1byte, m3byte, m1bit, M1Bit}, };
+use crate::{primitive::{M3Byte, M1Byte, m1byte, m3byte, m1bit, M1Bit, Word, MNBits}, };
+
+use super::MidiMessage;
 
 #[derive(Debug, Clone)]
 pub struct TextEvent;
@@ -7,10 +9,26 @@ pub struct TextEvent;
 pub struct ChannelPrefix;
 
 #[derive(Debug, Clone)]
+pub struct MIDIPort(M1Byte);
+
+#[derive(Debug, Clone)]
 pub struct EndOfTrack;
 
 #[derive(Debug, Clone)]
 pub struct Tempo(M3Byte);
+
+impl Tempo {
+  pub fn new(micro_secs : M3Byte) -> Self {Tempo(micro_secs)}
+  pub fn secs(&self) -> f32 {
+    *self.0 as f32 / 1000000.0
+  }
+  pub fn milli_secs(&self) -> f32 {
+    *self.0 as f32 / 1000.0
+  }
+  pub fn micro_secs(&self) -> f32 {
+    *self.0 as f32
+  }
+}
 
 #[derive(Debug, Clone)]
 pub struct SMPTEOffset;
@@ -26,7 +44,7 @@ pub struct TimeSignature {
 #[derive(Debug, Clone)]
 pub struct KeySignature {
   sf : M1Byte,
-  mi : M1Bit
+  mi : M1Byte
 }
 
 #[derive(Debug, Clone)]
@@ -40,6 +58,7 @@ pub enum MetaMessage {
   Marker(TextEvent) = 0x06,
   CuePoint(TextEvent) = 0x07,
   ChannelPrefix(ChannelPrefix) = 0x20,
+  MIDIPort(MIDIPort) = 0x21,
   EndOfTrack = 0x2F,
   Tempo(Tempo) = 0x51,
   SMPTEOffset = 0x54,
@@ -50,6 +69,13 @@ pub enum MetaMessage {
 
 impl MetaMessage {
 
+  pub fn get_tempo(&self) -> Option<Tempo> {
+    match self {
+        MetaMessage::Tempo(tempo) => Some(tempo.clone()),
+        _ => None,
+    }
+  }
+
   pub fn is_tempo_event(&self) -> bool {
     match &self {
       Self::Tempo(_) => true,
@@ -58,17 +84,13 @@ impl MetaMessage {
   }
 
   fn get_tempo_from(buf : &[u8]) -> Self{
-    assert!(buf.len() >= 5, "input slice passsed should be >= 5 bytes long. But passed input slice with {} length", buf.len());
-    // assert!(buf[0] == 0x51, "tempo event should start with 0x51 byte. But passed {:X}", buf[0]);
-    assert!(buf[1] == 3, "tempo event must be 3 bytes long. But passed '{:X}' instead.", buf[1]);
+    assert!(buf.len() == 3, "tempo event must be 3 bytes long. But passed '{:X}' instead.", buf[1]);
     
-    MetaMessage::Tempo(Tempo(m3byte!(&buf[2..5])))
+    MetaMessage::Tempo(Tempo(m3byte!(buf)))
   }
 
   fn get_time_signature_from(buf : &[u8]) -> Self {
-    assert!(buf.len() >= 6, "input slice passsed for 'time_signature' should be >= 6 bytes long. But passed input slice with {} length", buf.len());
-
-    assert!(buf[1] == 4, "tempo event must be 4 bytes long. But passed '{:X}' instead.", buf[1]);
+    assert!(buf.len() == 4, "time_signature must be 4 bytes long. But passed '{:X}' instead.", buf[1]);
 
     MetaMessage::TimeSignature (TimeSignature {
       nn : m1byte!(buf[0]),
@@ -80,29 +102,34 @@ impl MetaMessage {
 
   fn get_key_signature_from(buf : &[u8]) -> Self {
     MetaMessage::KeySignature(KeySignature {
-      sf : m1byte!(buf[0]),
-      mi : m1bit!(buf[1])
+      sf : buf[0].into(),
+      mi : buf[1].into()
     })
   }
 }
 
 
 
-impl From<(u8, &[u8])> for MetaMessage {
-  fn from((byte, rest): (u8, &[u8])) -> Self {
-    let subtype = rest[0];
+impl From<(u8, u8, &[u8])> for MetaMessage {
+  fn from((byte, subtype, rest): (u8, u8, &[u8])) -> Self {
     
     match subtype {
       0x01..=0x07 => Self::Text(TextEvent), 
       0x20 => Self::ChannelPrefix(ChannelPrefix),
       0x2F => Self::EndOfTrack,
-
+      0x21 => Self::MIDIPort(MIDIPort(rest[0].into())),
       0x51 => Self::get_tempo_from(rest),
       0x58 => Self::get_time_signature_from(rest),
       0x59 => Self::get_key_signature_from(rest),
       
-      _=> Self::Invalid(format!("From<&[u8]> trait not implemented for Meta-event sub-type with start byte {subtype:X}"))
+      _=> Self::Invalid(format!("From<&[u8]> trait not implemented for Meta-event sub-type with start byte 0x{subtype:X}"))
     }
+  }
+}
+
+impl From<(u8, &[u8])> for MetaMessage {
+  fn from((byte, rest): (u8, &[u8])) -> Self {
+    MetaMessage::from((byte, rest[0], &rest[1..]))
   }
 }
 

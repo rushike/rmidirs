@@ -8,9 +8,30 @@ Delta time are encoded as variable length bytes array (0 byte - 4 bytes). Last b
 
 
 ## MIDI
-<midi-header-chunk> <midi-track-chunk>*
+```<midi-header-chunk> <midi-track-chunk>* ```
 
 ### Variable Length Byte Array
+@Varnumber process the variable length number from `start` position.
+It will panic if number exceed u32 int.
+
+## Midi Var Number Format
+Strategy used is based on delta time encoding in MIDI messages
+Last 7 bits in each byte will carry info, 
+1 bits of every byte is set to 1 expect 1 bit of last byte is set to 0
+
+e.g. 
+
+| 8 bytes number| Variable Length encoding |
+|---------------|--------------------------|
+| 00000040      |    40                    |
+| 0000007F	    |    7F                    |
+| 00000080	    |    81 00                 |
+| 00002000	    |    C0 00                 |
+| 00003FFF	    |    FF 7F                 |
+| 00004000	    |    81 80 00              |
+| 00100000	    |    C0 80 00              |
+| 001FFFFF	    |    FF FF 7F              |
+| 00200000	    |    81 80 80 00           |
 
 ## Chunks
 Chunks stores the midi events.

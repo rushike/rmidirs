@@ -1,4 +1,8 @@
-use crate::{utils::{ByteEncodingFormat, functions::number}, parser::midi_track_parser::MidiTrackParser, model::midi_header::MidiHeader};
+use crate::{
+  utils::{ByteEncodingFormat, functions::number}, 
+  parser::midi_track_parser::MidiTrackParser, 
+  model::core::midi_header::MidiHeader
+};
 
 use super::{
   parser_state::ParserState, 
@@ -41,12 +45,12 @@ impl MidiTrackHeaderParser {
 
           let mut track_state = ParserState::new(
             track_name, 
-            state.curr(), 
-            total_length
+            ptr, 
+            ptr + total_length
           );
 
           track_state.forward(8);
-      
+
           midi_track_headers.push(MidiTrackParser::new(midi_header.clone(), track_state));
 
           state.forward(total_length);

@@ -2,7 +2,7 @@ use std::collections::HashMap;
 
 use crate::primitive::{M2Byte, M3Byte, m3byte};
 
-use super::{midi_track::MidiTrack, midi_event::{MidiEvent, meta_event::MetaEvent}};
+use super::{midi_track::MidiTrack, midi_event::{MidiEvent, meta_event::MetaEvent, meta_message::Tempo}};
 
 #[derive(Debug, Clone, Default)]
 pub struct NoteEvent {
@@ -42,7 +42,7 @@ pub struct  TimeLineEvent<T> {
 
 #[derive(Debug, Clone)]
 pub struct Timeline{
-  timeline: Vec<NoteEvent>,
+  timeline: Vec<MidiEvent>,
   time_div: M2Byte,
 }
 
@@ -51,7 +51,9 @@ impl<'a> From<&MidiTrack> for Timeline {
   fn from(track: &MidiTrack) -> Self {
     let mut timeline = Vec::new();
 
-    let mut tempo = m3byte!(500_000_u32);
+    let track_iter = track.iter();
+    
+    let mut tempo = track_iter.get_tempo().unwrap();
 
     let time_div = track.time_div;
 
@@ -59,10 +61,10 @@ impl<'a> From<&MidiTrack> for Timeline {
 
     let mut timekeeper = HashMap::new();
 
-    for event in track.iter(){
-      time += event.delta_time.to_seconds(time_div, tempo);
+    for event in track_iter{
+      time += event.delta_time().to_seconds(time_div, tempo);
       
-      tempo = update_tempo_if_tempo_event(&event, tempo);
+      tempo = event.get_tempo().unwrap_or(tempo);
 
       process_channel_event(time, event, &mut timeline, &mut timekeeper);
 
@@ -102,11 +104,10 @@ fn process_channel_event(time : f32,
     }
   }
 
-fn update_tempo_if_tempo_event(event : &MidiEvent, tempo : M3Byte) -> M3Byte{
-  match &event.event {
-    Event::MetaEvent(
-      MetaEvent::Tempo(tempo)
-    ) => *tempo,
-    _=> tempo
+/// update the temp of event is Tempo Event
+fn update_tempo(event : &MidiEvent, tempo : &mut Tempo) -> (){
+  match &event.get_tempo() {
+    Some(tempo) => todo!(),
+    None => (),
   }
 }
