@@ -28,12 +28,3 @@ impl MidiHeaderParser {
     }
   }
 }
-/*
-.add_header(
-  MidiHeader::new_raw(
-    &buf[8..10],
-    &buf[10..12],
-    &buf[12..14]
-  ),
-)
-*/

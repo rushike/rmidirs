@@ -26,7 +26,7 @@ impl From<(&MidiHeader, u32)> for MidiTrack {
     Self{
       events: Vec::new(),
       time_div : midi_header
-                    .division
+                    .division()
                     .metric_time()
                     .unwrap_or(m2byte!(540))
     }

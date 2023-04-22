@@ -32,7 +32,7 @@ impl MidiTrackParser {
     MidiTrackParser { midi_header, state }
   }
 
-  /// Parses a MIDI track. And move the slice pointer forward.
+  /// Parses a bytes into MIDI track.
   pub fn parse(&mut self, buf : &[u8]) -> Result<MidiTrack, MidiParseError> {
     let mut midi_track = MidiTrack::default();
 

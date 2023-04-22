@@ -2,7 +2,7 @@ use core::fmt;
 
 use crate::primitive::MXByte;
 
-/// Parser State stores the pts to position where parser is running currently
+/// Parser State stores the ptr to position where parser is running currently
 #[derive(Debug, Clone)]
 pub struct ParserState {
   name: String,
@@ -16,7 +16,7 @@ impl<'a> ParserState {
     return ParserState { name, start, curr : start, end};
   }
 
-  pub fn with(&self, name : String) -> ParserState { 
+  pub fn with_name(&self, name : String) -> ParserState { 
     return ParserState { name, start : self.start, curr : self.curr, end : self.end};
   }
 

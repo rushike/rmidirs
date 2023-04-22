@@ -17,7 +17,7 @@ impl MidiParser {
       midi.add_header(midi_header.clone());
 
 
-      let track_header_state = state.with(String::from("track-header-parser"));
+      let track_header_state = state.with_name(String::from("track-header-parser"));
 
       match MidiTrackHeaderParser::parse(buf, midi_header, track_header_state) {
         Ok(mut midi_track_parsers) => {

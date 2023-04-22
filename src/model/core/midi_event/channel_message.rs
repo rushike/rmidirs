@@ -19,16 +19,16 @@ lazy_static::lazy_static!(
 
 #[derive(Debug, Clone)]
 pub struct NoteOn {
-  channel : M4Bits,
-  note : M1Byte,
-  velocity : M1Byte
+  pub(crate) channel : M4Bits,
+  pub(crate) note : M1Byte,
+  pub(crate) velocity : M1Byte
 }
 
 #[derive(Debug, Clone)]
 pub struct NoteOff {
-  channel : M4Bits,
-  note : M1Byte,
-  velocity : M1Byte
+  pub(crate) channel : M4Bits,
+  pub(crate) note : M1Byte,
+  pub(crate) velocity : M1Byte
 }
 
 #[derive(Debug, Clone)]
@@ -67,8 +67,8 @@ pub struct PitchBend {
 #[derive(Debug, Clone)]
 #[repr(u32)]
 pub enum ChannelMessage {
-  NoteOn(NoteOn) = 0x8,
-  NoteOff(NoteOff) = 0x9,
+  NoteOn(NoteOn) = 0x9,
+  NoteOff(NoteOff) = 0x8,
   AfterTouch(AfterTouch) = 0xA,
   Controller(Controller) = 0xB,
   ProgramChange(ProgramChange)= 0xC,
@@ -82,8 +82,8 @@ impl ChannelMessage {
   pub fn event_byte(&self) -> Option<u8> {
     match self.event_channel() {
       Some(channel) => match self {
-        ChannelMessage::NoteOn(_) => Some(0x8 << 4 | channel),
-        ChannelMessage::NoteOff(_) => Some(0x9 << 4 | channel),
+        ChannelMessage::NoteOn(_) => Some(0x9 << 4 | channel),
+        ChannelMessage::NoteOff(_) => Some(0x8 << 4 | channel),
         ChannelMessage::AfterTouch(_) => Some(0xA << 4 | channel),
         ChannelMessage::Controller(_) => Some(0xB << 4 | channel),
         ChannelMessage::ProgramChange(_) => Some(0xC << 4 | channel),
@@ -117,8 +117,8 @@ impl ChannelMessage {
 
   pub fn is_note_on_event(&self) -> bool {
     match self {
-      ChannelMessage::NoteOn(_) => true,
-      ChannelMessage::NoteOff(event) => *event.velocity != 0,
+      ChannelMessage::NoteOn(note_on) => *note_on.velocity != 0,
+      ChannelMessage::NoteOff(note_off) => *note_off.velocity != 0,
       _=> false
     } 
   }
@@ -126,7 +126,7 @@ impl ChannelMessage {
   pub fn is_note_off_event(&self) -> bool {
     match self {
       ChannelMessage::NoteOn(event) => *event.velocity == 0,
-      ChannelMessage::NoteOff(_) => true,
+      ChannelMessage::NoteOff(note_off) => *note_off.velocity == 0,
       _=> false
     } 
   }
@@ -164,14 +164,14 @@ impl From<(u8, &[u8])> for ChannelMessage {
     fn from((byte, rest): (u8, &[u8])) -> Self {
       
       match byte & 0xF0 {
-        0x80 => {
+        0x90 => {
           ChannelMessage::NoteOn(NoteOn {
             channel: m4bits!(byte & 0xF),
             note: m1byte!(rest[0]),
             velocity: m1byte!(rest[1]),
           })
         },
-        0x90 => {
+        0x80 => {
           ChannelMessage::NoteOff(NoteOff {
             channel: m4bits!(byte & 0xF),
             note: m1byte!(rest[0]),

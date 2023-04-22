@@ -14,7 +14,7 @@ pub struct MIDIPort(M1Byte);
 #[derive(Debug, Clone)]
 pub struct EndOfTrack;
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Copy)]
 pub struct Tempo(M3Byte);
 
 impl Tempo {
@@ -27,6 +27,16 @@ impl Tempo {
   }
   pub fn micro_secs(&self) -> f32 {
     *self.0 as f32
+  }
+
+  pub fn bpm(&self) -> u32 {
+    ((60.0 * 1000_000.0) / *self.0 as f32 ).floor() as u32
+  }
+}
+
+impl Default for Tempo {
+  fn default() -> Self {
+    Self(500_000.into())
   }
 }
 

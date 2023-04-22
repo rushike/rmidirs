@@ -40,7 +40,7 @@ impl<'a> MidiEventParser<'a> {
 
     let event_info = &CHANNEL_EVENT_SCHEMA["info"][format!("0x{:1X}", event_type)];
 
-    if event_info.is_null() {return Err(MidiParseError::new(state.with(format!("{}@channel[0x{:1X}]", state.name(), event_byte)), MidiParseErrorKind::InvalidEventByte, None));}
+    if event_info.is_null() {return Err(MidiParseError::new(state.with_name(format!("{}@channel[0x{:1X}]", state.name(), event_byte)), MidiParseErrorKind::InvalidEventByte, None));}
 
     let length = event_info["length"].as_u64().unwrap() as usize;
     // dbg!(&state);
@@ -54,7 +54,11 @@ impl<'a> MidiEventParser<'a> {
     let event_type = state.next(buf, 1)[0];
     let event_sub_type = state.next(buf, 1)[0];
 
-    if META_EVENT_SCHEMA["info"]["0xFF"]["types"][format!("0x{:02X}", event_sub_type)].is_null() {return Err(MidiParseError::new(state.with(format!("{}@meta[0X{:02X}][0X{:02X}]", state.name(), event_type, event_sub_type)), MidiParseErrorKind::InvalidEventByte, None))}
+    if META_EVENT_SCHEMA["info"]["0xFF"]["types"][format!("0x{:02X}", event_sub_type)].is_null() {
+      return Err(MidiParseError::new(
+        state.with_name(format!("{}@meta[0X{:02X}][0X{:02X}]", state.name(), event_type, event_sub_type)), 
+        MidiParseErrorKind::InvalidEventByte, None))
+    }
 
     let event_length = *state.mxbyte(buf) as usize;
     

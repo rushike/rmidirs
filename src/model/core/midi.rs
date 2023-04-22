@@ -27,4 +27,6 @@ impl Midi {
   pub fn track(&self, n : usize) -> &MidiTrack {
     self.tracks.get(n).unwrap()
   }
+
+  pub fn tracks(&self) -> &Vec<MidiTrack> {&self.tracks}
 }

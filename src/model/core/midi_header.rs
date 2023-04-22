@@ -1,5 +1,3 @@
-#![allow(dead_code, unused_variables, unused_must_use, unused_imports)]
-
 use crate::{utils::{functions::{number, masked_number}, ByteEncodingFormat}, primitive::{M2Byte, m2byte}};
 
 
@@ -10,7 +8,16 @@ pub enum MidiFormat {
   MultiTracksIndependentSingleChannel = 2,
 }
 
-#[allow(non_camel_case_types)]
+impl From<MidiFormat> for M2Byte {
+  fn from(value: MidiFormat) -> Self {
+    match value {
+      MidiFormat::SingleTracksMultiChannel => m2byte!(0),
+      MidiFormat::MultiTracks => m2byte!(1),
+      MidiFormat::MultiTracksIndependentSingleChannel => m2byte!(2),
+    }
+  }
+}
+
 #[derive(Debug, Clone)]
 pub enum MidiDivision {
   MetricTime(u16),
@@ -28,11 +35,11 @@ impl MidiDivision {
 
 #[derive(Debug, Clone)]
 pub struct MidiHeader {
-  pub(crate) header : String,
-  pub(crate) length : u32,
-  pub(crate) format : MidiFormat,
-  pub(crate) ntrk : M2Byte,
-  pub(crate) division : MidiDivision,
+  header : String,
+  length : u32,
+  format : MidiFormat,
+  ntrk : M2Byte,
+  division : MidiDivision,
 }
 
 impl Default for MidiHeader {
@@ -48,6 +55,10 @@ impl Default for MidiHeader {
 }
 
 impl MidiHeader {
+  pub fn format(&self) -> MidiFormat {self.format.clone()}
+  pub fn division(&self) -> MidiDivision {self.division.clone()}
+  pub fn ntrk(&self) -> M2Byte {self.ntrk}
+
   pub fn new(format : MidiFormat, ntrk : M2Byte, division : MidiDivision) -> Self {
     Self {
       header : "MThd".to_string(),
@@ -62,13 +73,13 @@ impl MidiHeader {
     const ENC_FORMAT: ByteEncodingFormat = ByteEncodingFormat::BigEndian;
 
     MidiHeader::new(
-      Self::format(format),
+      Self::parse_format(format),
       m2byte!(ntrks), 
-      Self::division(division)
+      Self::parse_division(division)
     )
   }
 
-  fn format(format : &[u8]) -> MidiFormat{
+  fn parse_format(format : &[u8]) -> MidiFormat{
     assert!(format.len() == 2, "Midi Format is 2 byte value. But passed div : {:?} with len {} number of bytes", format, format.len());
 
     let format = number(format, ByteEncodingFormat::BigEndian);
@@ -81,8 +92,7 @@ impl MidiHeader {
     }
   }
 
-  #[allow(non_snake_case)]
-  fn division(div : &[u8]) -> MidiDivision {
+  fn parse_division(div : &[u8]) -> MidiDivision {
     assert!(div.len() == 2, "Midi Division is 2 byte value. But passed div : {:?} with len {} number of bytes", div, div.len());
     const BIT_MASK : u8 = 0x80;
     const ENC_FORMAT : ByteEncodingFormat = ByteEncodingFormat::BigEndian;

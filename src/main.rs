@@ -7,7 +7,11 @@ use serde_json::de;
 
 use rmidirs::{
   reader::{MidiFileReader, local::Local, buffer::{Buffer, self}, Reader},
-   m3byte, m4bits, m1byte, m2byte, model::core::midi_track::AbsoluteMidiTrack
+   m3byte, m4bits, m1byte, m2byte, 
+   model::{
+    core::midi_track::AbsoluteMidiTrack,
+    note_seq::TrackSeq
+  }
 };
 
 lazy_static::lazy_static!(
@@ -17,9 +21,11 @@ lazy_static::lazy_static!(
 
 fn main() {
   
-  let midi = MidiFileReader::local("./midis/test.mid").parse();
+  let midi = MidiFileReader::local("./midis/test2.mid").parse();
   // println!("midi : ) {:?}", midi.track(0));
-  println!("midi : ) {:?}", AbsoluteMidiTrack::from( midi.track(0)));
+  // println!("midi : ) {:?}", AbsoluteMidiTrack::from( midi.track(0)));
+  let tracksq = TrackSeq::from(midi);
+  println!("midi : track_seq , {tracksq:?}")
   // println!("leading ones {}, {}", i8::from_be_bytes([0xfa]));
 }
 
