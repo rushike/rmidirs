@@ -87,12 +87,4 @@ fn masked<'a>(buf : &'a [u8], mask : &'a [u8]) -> Vec<u8> {
   out_buf       
 }
 
-/// @get_bytes_with_cntrl_bit process bytes till `cntrl_bit` is set to `cntrl_val`
-/// 
-/// # Panics
-/// 1. It will panic if `cntrl_bit` > 8.
-/// 2. It will panic if `cntrl_val` not in  [0, 1].
-fn get_bytes_with_cntrl_bit(buf : &[u8], start : usize, cntrl_bit : u8, cntrl_val : u8 ) -> &[u8] {
-  buf
-}
 

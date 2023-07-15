@@ -67,7 +67,13 @@ impl MidiTrackParser {
             MidiEvent::new(delta_time, MidiMessage::SysEvent(sys_event))
           }
 
-          Some(MidiMessageType::Invalid(msg)) => return Err(MidiParseError::new(self.state.clone(), MidiParseErrorKind::InvalidEventByte, Some(msg)))
+          Some(MidiMessageType::Invalid(msg)) => return Err(
+            MidiParseError::new(
+              self.state.clone(), 
+              MidiParseErrorKind::InvalidEventByte, 
+              format!("invalid event byte {}, can't tag to Channel, Meta or Sys event", msg),
+              Some(msg))
+          )
       };
       midi_track.add_event(midi_event);
     };  

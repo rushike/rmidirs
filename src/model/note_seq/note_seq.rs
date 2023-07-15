@@ -109,7 +109,6 @@ impl From<(&MidiHeader, &MidiTrack)> for NoteSeq {
                 None => return,
             };
             
-            println!("remove note of in timekeeper : {channel_message:?}, {time}, {start_time}");
             // adding the event to note_seq
             note_seq.notes.push(Node::new(
               time, 

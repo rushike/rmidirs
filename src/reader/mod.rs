@@ -35,8 +35,6 @@ pub struct MidiFileReader<'a> {
 
 /// Reader trait defines behavior common to all readers.
 /// 
-/// # Panics
-/// 1. All methods of this trait will panic if reach EOF.
 /// 
 pub trait Reader {
   fn bytes(&self) -> &[u8];

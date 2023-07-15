@@ -40,7 +40,15 @@ impl<'a> MidiEventParser<'a> {
 
     let event_info = &CHANNEL_EVENT_SCHEMA["info"][format!("0x{:1X}", event_type)];
 
-    if event_info.is_null() {return Err(MidiParseError::new(state.with_name(format!("{}@channel[0x{:1X}]", state.name(), event_byte)), MidiParseErrorKind::InvalidEventByte, None));}
+    if event_info.is_null() {
+      return Err(
+        MidiParseError::new(
+          state.with_name(format!("{}@channel[0x{:1X}]", state.name(), event_byte)), 
+          MidiParseErrorKind::InvalidEventByte,
+          format!("channel[{:1X}] not a valid channel event byte", event_byte),
+          None)
+      );
+    }
 
     let length = event_info["length"].as_u64().unwrap() as usize;
     // dbg!(&state);
@@ -56,8 +64,11 @@ impl<'a> MidiEventParser<'a> {
 
     if META_EVENT_SCHEMA["info"]["0xFF"]["types"][format!("0x{:02X}", event_sub_type)].is_null() {
       return Err(MidiParseError::new(
-        state.with_name(format!("{}@meta[0X{:02X}][0X{:02X}]", state.name(), event_type, event_sub_type)), 
-        MidiParseErrorKind::InvalidEventByte, None))
+        state.with_name(format!("{}@meta[0X{:02X}][0X{:02X}]", state.name(), event_type, event_sub_type)),
+        MidiParseErrorKind::InvalidEventByte, 
+        format!("meta[0X{:02X}][0X{:02X}] not a valid meta event type", event_type, event_sub_type),
+        None)
+      )
     }
 
     let event_length = *state.mxbyte(buf) as usize;

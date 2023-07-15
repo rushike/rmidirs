@@ -1,3 +1,5 @@
+use std::fmt::format;
+
 use crate::{
   utils::{ByteEncodingFormat, functions::number}, 
   parser::midi_track_parser::MidiTrackParser, 
@@ -61,7 +63,13 @@ impl MidiTrackHeaderParser {
             state.curr(),
             buf.len()
           );
-          return Err(MidiParseError::new(track_err_start, InvalidMidiTrackHeader, None))
+          return Err(
+            MidiParseError::new(
+              track_err_start, 
+              InvalidMidiTrackHeader, 
+              format!("invalid track header found at position {}", state.curr()),
+              None
+            ))
         }
       }
     }

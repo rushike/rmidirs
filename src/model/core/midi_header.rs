@@ -2,10 +2,12 @@ use crate::{utils::{functions::{number, masked_number}, ByteEncodingFormat}, pri
 
 
 #[derive(Debug, Clone)]
+#[repr(i16)]
 pub enum MidiFormat {
   SingleTracksMultiChannel = 0,
   MultiTracks = 1,
   MultiTracksIndependentSingleChannel = 2,
+  Invalid(String) = -1
 }
 
 impl From<MidiFormat> for M2Byte {
@@ -14,6 +16,7 @@ impl From<MidiFormat> for M2Byte {
       MidiFormat::SingleTracksMultiChannel => m2byte!(0),
       MidiFormat::MultiTracks => m2byte!(1),
       MidiFormat::MultiTracksIndependentSingleChannel => m2byte!(2),
+      MidiFormat::Invalid(_) => m2byte!(-1),
     }
   }
 }
@@ -21,7 +24,8 @@ impl From<MidiFormat> for M2Byte {
 #[derive(Debug, Clone)]
 pub enum MidiDivision {
   MetricTime(u16),
-  SubDivision((i8, u8))
+  SubDivision((i8, u8)),
+  Invalid(String)
 }
 
 impl MidiDivision {
@@ -29,6 +33,7 @@ impl MidiDivision {
     match self {
         MidiDivision::MetricTime(val) => Some(m2byte!(*val)),
         MidiDivision::SubDivision(_) => None,
+        MidiDivision::Invalid(_) => None,
     }
   }
 }
@@ -88,7 +93,7 @@ impl MidiHeader {
       0 => MidiFormat::SingleTracksMultiChannel,
       1 => MidiFormat::MultiTracks,
       2 => MidiFormat::MultiTracksIndependentSingleChannel,
-      _ => panic!("'format' should be either 0, 1, or 2, but got {format}")
+      _ => MidiFormat::Invalid(format!("'format' should be either 0, 1, or 2, but got {format}"))
     }
   }
 
@@ -112,7 +117,7 @@ impl MidiHeader {
         MidiDivision::SubDivision((nSMPTE, frame_resolution))
       }
 
-      _=>panic!("midi_header > division : This should never happen")
+      _=>MidiDivision::Invalid(format!("midi_header > division : This should never happen"))
     }
   }
 }

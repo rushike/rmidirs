@@ -31,7 +31,7 @@ pub enum MidiMessageType {
 
 impl MidiMessage {
   pub fn event_type<'a>(byte : u8) -> Option<MidiMessageType> {
-    if byte & 0xF0 >= 0x80 && byte & 0xF0 < 0xF0 {return Some(MidiMessageType::Channel)};
+    if byte & 0xF0 >= 0x80 && byte & 0xF0 < 0xF0 { return Some(MidiMessageType::Channel) };
     match byte {
        0xFF => Some(MidiMessageType::Meta),
        0xF0 | 0xF7  => Some(MidiMessageType::Sys),

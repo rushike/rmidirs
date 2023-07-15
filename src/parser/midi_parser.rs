@@ -8,11 +8,12 @@ impl MidiParser {
     /// Parses a midi buffer to Midi instance
     /// Midi buffer should have valid Midi header and Midi track information
     pub fn parse(buf : &[u8]) -> Result<Midi, MidiParseError> {
-      let mut state = ParserState::new(String::from("midi"), 0, buf.len());
+      let mut state: ParserState = ParserState::new(String::from("midi"), 0, buf.len());
 
+      
+      let midi_header = MidiHeaderParser::parse(buf, &mut state)?;
+      
       let mut midi = Midi::default();
-
-      let midi_header = MidiHeaderParser::parse(buf, &mut state);
 
       midi.add_header(midi_header.clone());
 

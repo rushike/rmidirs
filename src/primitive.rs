@@ -2,8 +2,6 @@
 
 use std::ops::{Deref, BitAnd};
 
-use crate::utils::{functions::{number, from_var_len}, ByteEncodingFormat};
-
 pub type FractionWord = (u32, u32);
 
 pub type FloatWord = f32;
@@ -88,7 +86,6 @@ impl From<Word> for MXByte {
 
 impl  From<&[u8]> for MXByte {
   /// @varnumber process the variable length number from `start` position.
-  /// It will panic if number exceed u32 int.
   /// 
   /// ## Midi Var Number Format
   /// Strategy used is based on delta time encoding in MIDI messages
@@ -138,6 +135,7 @@ macro_rules! mxbyte {
   }
 }
 
+#[macro_export]
 macro_rules! impl_from_for_mtypes{
   ($t_in : tt, $t_out : tt, $mask : literal) => {
     impl From<$t_in> for $crate::primitive::$t_out {

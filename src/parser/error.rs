@@ -21,12 +21,13 @@ impl fmt::Display for MidiParseErrorKind {
 pub struct MidiParseError {
   state : ParserState,
   kind : MidiParseErrorKind,
+  message : String,
   trace : Option<String>,
 }
 
 impl MidiParseError {
-  pub fn new(state: ParserState, kind: MidiParseErrorKind, trace : Option<String>) -> MidiParseError {
-    return MidiParseError { state, kind, trace};
+  pub fn new(state: ParserState, kind: MidiParseErrorKind, message : String, trace : Option<String>) -> MidiParseError {
+    return MidiParseError { state, kind, message, trace};
   }
 }
 

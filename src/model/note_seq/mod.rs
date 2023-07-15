@@ -6,5 +6,6 @@ mod note;
 
 mod node;
 
-pub use track_seq::TrackSeq;
-pub use note_seq::NoteSeq;
+pub use crate::model::note_seq::track_seq::TrackSeq;
+
+pub use crate::model::note_seq::note_seq::NoteSeq;

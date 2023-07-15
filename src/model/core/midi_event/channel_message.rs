@@ -211,7 +211,7 @@ impl From<(u8, &[u8])> for ChannelMessage {
             vmsb : m1byte!(rest[1]),
           })
         },
-        byte    => panic!("From<&[u8]> trait not implemented for Channel-event with start byte 0x{:02X} ", byte) 
+        byte => ChannelMessage::Invalid(format!("From<&[u8]> trait not implemented for Channel-event with start byte 0x{:02X} ", byte))
     }
   }
 }
