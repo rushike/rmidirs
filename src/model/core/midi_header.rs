@@ -21,6 +21,17 @@ impl From<MidiFormat> for M2Byte {
   }
 }
 
+impl From<MidiFormat> for Vec<u8> {
+  fn from(midi_format: MidiFormat) -> Self {
+    match  midi_format{
+        MidiFormat::SingleTracksMultiChannel            => vec![0,0],
+        MidiFormat::MultiTracks                         => vec![0,1],
+        MidiFormat::MultiTracksIndependentSingleChannel => vec![0,2],
+        MidiFormat::Invalid(_)                          => vec![0,0],
+    }
+  }
+}
+
 #[derive(Debug, Clone)]
 pub enum MidiDivision {
   MetricTime(u16),
@@ -34,6 +45,16 @@ impl MidiDivision {
         MidiDivision::MetricTime(val) => Some(m2byte!(*val)),
         MidiDivision::SubDivision(_) => None,
         MidiDivision::Invalid(_) => None,
+    }
+  }
+}
+
+impl From<MidiDivision> for Vec<u8>{
+  fn from(midi_division: MidiDivision) -> Self {
+    match midi_division {
+        MidiDivision::MetricTime(m) => vec![m as u8 >> 8, m as u8 & 0xF],
+        MidiDivision::SubDivision(_)     => todo!(),
+        MidiDivision::Invalid(_)         => todo!(),
     }
   }
 }
@@ -119,5 +140,22 @@ impl MidiHeader {
 
       _=>MidiDivision::Invalid(format!("midi_header > division : This should never happen"))
     }
+  }
+}
+
+impl From<MidiHeader> for Vec<u8> {
+  fn from(midi_header: MidiHeader) -> Self {
+    let midi_header_bytes: Vec<u8> = b"MThd".to_vec();
+    let midi_header_len  : Vec<u8> = vec![0,0,0,6];
+    let midi_format      : Vec<u8> = midi_header.format.into();
+    let ntracks          : Vec<u8> = vec![*midi_header.ntrk as u8 >> 8, *midi_header.ntrk as u8 & 0xFF];
+    let midi_division    : Vec<u8> = midi_header.division.into();
+    
+    [ midi_header_bytes,
+      midi_header_len,
+      midi_format,
+      ntracks,
+      midi_division
+    ].concat()
   }
 }
