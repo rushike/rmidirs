@@ -111,10 +111,10 @@ impl MidiHeader {
 
       // Sub Division;  SMPTE and MIDI Time Code.
       BIT_MASK => {
-        let nSMPTE =  i8::from_be_bytes([div[0] & 0x7f]);
+        let n_smpte =  i8::from_be_bytes([div[0] & 0x7f]);
         let frame_resolution = div[1] & 0xFF;
-        assert!(!(nSMPTE == -24 || nSMPTE ==-25 || nSMPTE == 29 || nSMPTE == 30), "SMPTE (1st byte) of division should be from list [-24, -25, -29, -30]. But {} was passed with byte val : {}", nSMPTE, div[0]);
-        MidiDivision::SubDivision((nSMPTE, frame_resolution))
+        assert!(!(n_smpte == -24 || n_smpte ==-25 || n_smpte == 29 || n_smpte == 30), "SMPTE (1st byte) of division should be from list [-24, -25, -29, -30]. But {} was passed with byte val : {}", n_smpte, div[0]);
+        MidiDivision::SubDivision((n_smpte, frame_resolution))
       }
 
       _=>MidiDivision::Invalid(format!("midi_header > division : This should never happen"))

@@ -8,7 +8,9 @@ pub type FloatWord = f32;
 
 pub type Word = u32;
 
-pub type DoubleWord = u32;
+pub const WORD_MASK : Word = 0xFFFFFFFF;
+
+pub type DoubleWord = u64;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct M4Byte(Word);
@@ -24,10 +26,19 @@ impl From<&[u8]>  for M4Byte {
 pub struct M3Byte(Word);
 
 impl From<&[u8]>  for M3Byte {
-    fn from(buf: &[u8]) -> Self {
-      assert!(buf.len() >= 3, "exptected the input buffer to have at least 3 bytes. But passed buffer with {} length", buf.len());
-      M3Byte((buf[0] as Word) << 16 | (buf[1] as Word) << 8 | buf[2] as Word)
-    }
+  fn from(buf: &[u8]) -> Self {
+    assert!(buf.len() >= 3, "exptected the input buffer to have at least 3 bytes. But passed buffer with {} length", buf.len());
+    M3Byte((buf[0] as Word) << 16 | (buf[1] as Word) << 8 | buf[2] as Word)
+  }
+}
+
+impl From<M3Byte> for Vec<u8> {
+  fn from(b3: M3Byte) -> Self {
+    let z_byte = ( b3.0         & 0xFF) as u8;
+    let f_byte = ((b3.0 >> 8 )  & 0xFF) as u8;
+    let s_byte = ((b3.0 >> 16)  & 0xFF) as u8;
+    return vec![s_byte, f_byte, z_byte];
+  }
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
@@ -43,6 +54,12 @@ impl From<&[u8]>  for M2Byte {
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct M1Byte(Word);
+
+impl From<M1Byte> for Vec<u8> {
+  fn from(b1: M1Byte) -> Self {
+    vec![(b1.0 & 0xFF) as u8]
+  }
+}
 
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
@@ -128,6 +145,7 @@ impl Deref for MXByte {
     &self.0
   }
 }
+
 #[macro_export]
 macro_rules! mxbyte {
   ($num : expr) => {

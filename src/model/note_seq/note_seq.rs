@@ -83,17 +83,12 @@ impl From<(&MidiHeader, &MidiTrack)> for NoteSeq {
       time += event.delta_time().to_seconds(midi_division.into(), tempo.micro_secs());
       
       // adjusting current tempo to new tempo if current event is tempo change event.
-      tempo = match event.get_tempo() {
-        Some(tempo) =>tempo,
-        None => tempo,
-      };
+      tempo = event.get_tempo().unwrap_or(tempo);
 
       match event.message() {
         ChannelEvent(channel_message) => {
           if channel_message.is_note_on_event() {
             // Will insert the Note On event into timekeeper, and mark the current time
-            println!("insert note on in timekeeper : {channel_message:?}, {time}");
-            // dbg!(&timekeeper);
             let note_no : Word = channel_message.get_note_number().unwrap().into();
             timekeeper.insert(note_no, (time, channel_message.clone()));
           }

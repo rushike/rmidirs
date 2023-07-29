@@ -24,11 +24,23 @@ pub struct NoteOn {
   pub(crate) velocity : M1Byte
 }
 
+impl From<NoteOn> for Vec<u8> {
+  fn from(note_on: NoteOn) -> Self {
+    vec![0x90 & u8::from(note_on.channel), note_on.note.into(), note_on.velocity.into()]
+  }
+}
+
 #[derive(Debug, Clone)]
 pub struct NoteOff {
   pub(crate) channel : M4Bits,
   pub(crate) note : M1Byte,
   pub(crate) velocity : M1Byte
+}
+
+impl From<NoteOff> for Vec<u8> {
+  fn from(note_off: NoteOff) -> Self {
+    vec![0x80 & u8::from(note_off.channel), note_off.note.into(), note_off.velocity.into()]
+  }
 }
 
 #[derive(Debug, Clone)]
@@ -38,6 +50,12 @@ pub struct AfterTouch {
   amount : M1Byte
 }
 
+impl From<AfterTouch> for Vec<u8> {
+  fn from(after_touch: AfterTouch) -> Self {
+    vec![0xA0 & u8::from(after_touch.channel), after_touch.note.into(), after_touch.amount.into()]
+  }
+}
+
 #[derive(Debug, Clone)]
 pub struct Controller {
   channel : M4Bits,
@@ -45,10 +63,23 @@ pub struct Controller {
   value : M1Byte
 }
 
+impl From<Controller> for Vec<u8> {
+  fn from(controller: Controller) -> Self {
+    vec![0xB0 & u8::from(controller.channel), controller.controller_type.into(), controller.value.into()]
+  }
+}
+
+
 #[derive(Debug, Clone)]
 pub struct ProgramChange {
   channel : M4Bits,
   program_number : M1Byte
+}
+
+impl From<ProgramChange> for Vec<u8> {
+  fn from(program_change: ProgramChange) -> Self {
+    vec![0xC0 & u8::from(program_change.channel), program_change.program_number.into()]
+  }
 }
 
 #[derive(Debug, Clone)]
@@ -57,12 +88,26 @@ pub struct ChannelAfterTouch {
   amount : M1Byte
 }
 
+impl From<ChannelAfterTouch> for Vec<u8> {
+  fn from(channel_after_touch: ChannelAfterTouch) -> Self {
+    vec![0xD0 & u8::from(channel_after_touch.channel), channel_after_touch.amount.into()]
+  }
+}
+
+
 #[derive(Debug, Clone)]
 pub struct PitchBend {
   channel : M4Bits,
   vlsb : M1Byte,
   vmsb : M1Byte
 }
+
+impl From<PitchBend> for Vec<u8> {
+  fn from(pitch_bend: PitchBend) -> Self {
+    vec![0xE0 & u8::from(pitch_bend.channel), pitch_bend.vlsb.into(), pitch_bend.vmsb.into()]
+  }
+}
+
 
 #[derive(Debug, Clone)]
 #[repr(u32)]
@@ -147,7 +192,7 @@ impl ChannelMessage {
     return byte & 0xF0 == 0xB0;
   }
 
-  pub fn info_from_str(name : &str) -> &serde_json::Value {
+  pub fn info_from_name(name : &str) -> &serde_json::Value {
     return &CHANNEL_EVENT_SCHEMA["map_str"][name];
   }
   
@@ -219,5 +264,24 @@ impl From<(u8, &[u8])> for ChannelMessage {
 impl From<&[u8]> for ChannelMessage{
   fn from(bytes: &[u8]) -> Self {
     Self::from((bytes[0], &bytes[1..]))    
+  }
+}
+
+/// Converts ChannelMessage to bytes (midi v1 format).
+/// 
+/// It simply calls `.into()` method on the individual message type
+/// 
+impl From<ChannelMessage> for  Vec<u8>{
+  fn from(msg: ChannelMessage) -> Self {
+    match msg {
+        ChannelMessage::NoteOn(note_on) => note_on.into(),
+        ChannelMessage::NoteOff(note_off) => note_off.into(),
+        ChannelMessage::AfterTouch(after_touch) => after_touch.into(),
+        ChannelMessage::Controller(controller) => controller.into(),
+        ChannelMessage::ProgramChange(program_change) => program_change.into(),
+        ChannelMessage::ChannelAfterTouch(channel_after_touch) => channel_after_touch.into(),
+        ChannelMessage::PitchBend(pitch_bend) => pitch_bend.into(),
+        ChannelMessage::Invalid(_) => vec![],
+    }
   }
 }
