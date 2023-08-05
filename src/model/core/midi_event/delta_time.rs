@@ -1,9 +1,12 @@
 use core::time;
 
-use crate::{primitive::{MXByte, mxbyte, M2Byte, M3Byte}};
+use crate::primitive::{MXByte, mxbyte, M2Byte, M3Byte};
 
 use super::meta_message::Tempo;
 
+/// Deltatime stores the variable time used before every MIDI Events. 
+/// It is not stored as seconds, it unit complete depends on Midi Header,
+/// Metric Version / SMPTE resolution byte in Midi Header.
 #[derive(Debug, Clone)]
 pub struct DeltaTime(MXByte);
 
@@ -44,5 +47,11 @@ impl From<u32> for DeltaTime {
 impl From<MXByte> for DeltaTime {
   fn from(delta_time: MXByte) -> Self {
     DeltaTime(delta_time)
+  }
+}
+
+impl From<DeltaTime> for Vec<u8> {
+  fn from(delta_time: DeltaTime) -> Self {
+    delta_time.0.into()
   }
 }

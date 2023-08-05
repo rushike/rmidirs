@@ -136,7 +136,19 @@ impl  From<&[u8]> for MXByte {
     mxbyte!(num)
   }
 }
-  
+
+
+ impl From<MXByte> for Vec<u8> {
+  fn from(mxbyte: MXByte) -> Self {
+    let mut vec : Vec<u8> = vec![0; mxbyte.1];
+    let mut num = mxbyte.0;
+    for i in (0..mxbyte.1).rev() {
+      vec[i] = ((num & 0xF7) | 0x80) as u8;
+      num >>= 7;
+    } vec[mxbyte.1 - 1] &= 0x7F;
+    vec
+  }
+} 
 
 impl Deref for MXByte {
   type Target = Word;

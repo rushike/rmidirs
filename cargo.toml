@@ -12,5 +12,8 @@ crate-type = ["cdylib", "rlib"]
 lazy_static = "1.4.0"
 serde_json = "1.0"
 
+[dependencies.wasm-bindgen]
+version = "0.2.74"
+
 [dependencies.cfg-if]
 version = "1.0.0"

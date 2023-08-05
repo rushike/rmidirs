@@ -51,7 +51,7 @@ impl MidiTrackParser {
             match midi_event_parser.parse_channel_event(buf, &mut self.state, last_event_byte) {
               Ok(channel_message) => {
                 last_event_byte = channel_message.event_byte();
-                MidiEvent::new(delta_time, MidiMessage::ChannelEvent(channel_message))
+                MidiEvent::new(delta_time, MidiMessage::ChannelMessage(channel_message))
               },
               Err(err) => return Err(err)
             }
@@ -59,12 +59,12 @@ impl MidiTrackParser {
           Some(MidiMessageType::Meta) => {
             last_event_byte = None;
             let meta_event = midi_event_parser.parse_meta_event(buf, &mut self.state).unwrap();
-            MidiEvent::new(delta_time, MidiMessage::MetaEvent(meta_event))
+            MidiEvent::new(delta_time, MidiMessage::MetaMessage(meta_event))
           },
           Some(MidiMessageType::Sys) => {
             last_event_byte = None;
             let sys_event = midi_event_parser.parse_sys_event(buf).unwrap();
-            MidiEvent::new(delta_time, MidiMessage::SysEvent(sys_event))
+            MidiEvent::new(delta_time, MidiMessage::SysMessage(sys_event))
           }
 
           Some(MidiMessageType::Invalid(msg)) => return Err(

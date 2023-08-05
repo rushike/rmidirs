@@ -14,9 +14,9 @@ pub mod delta_time;
 
 #[derive(Debug, Clone)]
 pub enum MidiMessage {
-    ChannelEvent(ChannelMessage),
-    MetaEvent(MetaMessage),
-    SysEvent(SysEvent),
+    ChannelMessage(ChannelMessage),
+    MetaMessage(MetaMessage),
+    SysMessage(SysEvent),
     Invalid(String)
 }
 
@@ -47,17 +47,29 @@ impl From<(u8, &[u8])> for MidiMessage {
     let event_type = Self::event_type(byte).unwrap_or(MidiMessageType::Invalid(format!("Can't create MIDI event. Unexpected MIDI event byte, passed 0x{:0X}", byte)));
     
     match event_type  {
-      MidiMessageType::Channel => { 
-        MidiMessage::ChannelEvent(ChannelMessage::from((byte, rest)))
+      MidiMessageType::Channel => { // channel event
+        MidiMessage::ChannelMessage(ChannelMessage::from((byte, rest)))
       }, 
       MidiMessageType::Meta => { // meta event
-        MidiMessage::MetaEvent(MetaMessage::from((byte, rest)))
+        MidiMessage::MetaMessage(MetaMessage::from((byte, rest)))
       },
       MidiMessageType::Sys => { // sysex event
-        MidiMessage::SysEvent(SysEvent)
+        MidiMessage::SysMessage(SysEvent)
       }
       MidiMessageType::Invalid(msg) => MidiMessage::Invalid(msg),
     } 
+  }
+}
+
+impl From<MidiMessage> for Vec<u8> {
+  /// Convert MidiMessage to bytes
+  fn from(message: MidiMessage) -> Self {
+    match message {
+        MidiMessage::ChannelMessage(channel_message) => channel_message.into(),
+        MidiMessage::MetaMessage(meta_message) => meta_message.into(),
+        MidiMessage::SysMessage(sys_event) => sys_event.into(),
+        MidiMessage::Invalid(_) => vec![],
+    }
   }
 }
 
@@ -90,28 +102,28 @@ impl MidiEvent {
 
   pub fn is_channel_event(&self) -> bool {
     match self.message {
-      MidiMessage::ChannelEvent(_) => true,
+      MidiMessage::ChannelMessage(_) => true,
         _ => false
     }
   }
 
   pub fn is_note_on_off_event(&self) -> bool {
     match &self.message {
-      MidiMessage::ChannelEvent(event) => event.is_note_on_off_event(),
+      MidiMessage::ChannelMessage(event) => event.is_note_on_off_event(),
       _ => false
   }
   }
 
   pub fn is_note_on_event(&self) -> bool {
     match &self.message {
-      MidiMessage::ChannelEvent(event) => event.is_note_on_event(),
+      MidiMessage::ChannelMessage(event) => event.is_note_on_event(),
       _ => false
     }
   }
 
   pub fn is_note_off_event(&self) -> bool {
     match &self.message {
-      MidiMessage::ChannelEvent(event) => event.is_note_off_event(),
+      MidiMessage::ChannelMessage(event) => event.is_note_off_event(),
       _ => false
     }
   }
@@ -122,30 +134,30 @@ impl MidiEvent {
 
   pub fn is_tempo_event(&self) -> bool {
     match &self.message {
-      MidiMessage::MetaEvent(event) => event.is_tempo_event(),
+      MidiMessage::MetaMessage(event) => event.is_tempo_event(),
       _=> false
     }
   }
 
   pub fn get_tempo(&self) -> Option<Tempo> {
     match &self.message {
-      MidiMessage::MetaEvent(msg) => msg.get_tempo(),
+      MidiMessage::MetaMessage(msg) => msg.get_tempo(),
       _ => None,
     }
   } 
 
   pub fn get_note_number(&self) -> Option<M1Byte> {
     match &self.message {
-      MidiMessage::ChannelEvent(event) => event.get_note_number(),
+      MidiMessage::ChannelMessage(event) => event.get_note_number(),
       _ => None
     }
   }
 
   pub fn event_byte(&self) -> Option<u8> {
     match &self.message {
-        MidiMessage::ChannelEvent(event) => event.event_byte(),
-        MidiMessage::MetaEvent(_) => Some(0xFF),
-        MidiMessage::SysEvent(_) => Some(0xF0),
+        MidiMessage::ChannelMessage(event) => event.event_byte(),
+        MidiMessage::MetaMessage(_) => Some(0xFF),
+        MidiMessage::SysMessage(_) => Some(0xF0),
         MidiMessage::Invalid(_) => None
     }
   }
@@ -174,6 +186,18 @@ impl From<(MXByte, &[u8])> for MidiEvent {
        Self::from((delta_time, bytes[0], &bytes[1..]))
     }
 }
+
+impl From<MidiEvent> for Vec<u8> {
+  fn from(midi_event: MidiEvent) -> Self {
+    let delta_time : Vec<u8> = midi_event.delta_time.into();
+    let message     : Vec<u8> = midi_event.message.into();
+
+    [delta_time, message].concat()
+  }
+}
+
+
+
 
 #[derive(Debug, Clone)]
 pub struct AbsoluteMidiEvent {

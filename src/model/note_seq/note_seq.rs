@@ -4,8 +4,7 @@ use crate::{
   primitive::{M2Byte, Word, FloatWord, FractionWord}, 
   model::core::{midi_track::MidiTrack, midi::Midi, midi_header::MidiHeader, 
     midi_event::{
-      MidiMessage::{MetaEvent, ChannelEvent, SysEvent, Invalid},
-      channel_message::{ChannelMessage, self},
+      MidiMessage::{MetaMessage, ChannelMessage, SysMessage, Invalid},
       meta_message::Tempo
     },
   }
@@ -86,7 +85,7 @@ impl From<(&MidiHeader, &MidiTrack)> for NoteSeq {
       tempo = event.get_tempo().unwrap_or(tempo);
 
       match event.message() {
-        ChannelEvent(channel_message) => {
+        ChannelMessage(channel_message) => {
           if channel_message.is_note_on_event() {
             // Will insert the Note On event into timekeeper, and mark the current time
             let note_no : Word = channel_message.get_note_number().unwrap().into();

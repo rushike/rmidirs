@@ -2,7 +2,7 @@
 
 use std::ops::Add;
 
-use crate::{primitive::{M4Byte, M2Byte, m2byte, m4byte, m3byte} };
+use crate::primitive::{M4Byte, M2Byte, m2byte, m4byte, m3byte};
 
 use super::{midi_event::{MidiEvent, meta_message::Tempo, AbsoluteMidiEvent}, midi_header::MidiHeader};
 
@@ -32,6 +32,7 @@ impl From<(&MidiHeader, u32)> for MidiTrack {
     }
   }
 }
+
 impl MidiTrack {
   /// Create a new MidiTrack
   pub fn new(length : u32) -> Self {
@@ -50,6 +51,8 @@ impl MidiTrack {
     self.events.push(event);
   }
 }
+
+
 
 pub struct MidiTrackIter<'a> {
   events : &'a [MidiEvent],
@@ -81,6 +84,8 @@ impl<'a> Iterator for MidiTrackIter<'a> {
     }
   }
 }
+
+
 
 #[derive(Debug, Clone)]
 pub struct AbsoluteMidiTrack {
